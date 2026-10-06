@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="התינוק שלנו">
+<meta name="theme-color" content="#F2F6FB">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>התינוק שלנו</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F6FB; --surface:#FFFFFF; --ink:#1C2742; --muted:#62708C; --line:#DCE4EF;
+  --sky:#DCEAF8; --gold:#D9A43A; --gold-soft:#FBF1DC; --done:#2F8F6F; --danger:#B4453A;
+  --card-a:#1C2742; --card-b:#2C3D66; --card-ink:#F4F7FC;
+  --serif:"Frank Ruhl Libre", "David", "Times New Roman", serif;
+  --sans:"Assistant", "Arial Hebrew", Arial, system-ui, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10162A; --surface:#19213A; --ink:#E9EEF8; --muted:#9AA7C2; --line:#2A3555;
+    --sky:#22305A; --gold:#E8BC5C; --gold-soft:#3A3220; --done:#5BC79E; --danger:#E07B70;
+    --card-a:#25345E; --card-b:#3A5088; --card-ink:#F4F7FC;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10162A; --surface:#19213A; --ink:#E9EEF8; --muted:#9AA7C2; --line:#2A3555;
+  --sky:#22305A; --gold:#E8BC5C; --gold-soft:#3A3220; --done:#5BC79E; --danger:#E07B70;
+  --card-a:#25345E; --card-b:#3A5088; --card-ink:#F4F7FC;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px}
+main{max-width:560px;margin:0 auto;padding:16px 16px 110px}
+header.top{max-width:560px;margin:0 auto;padding:14px 16px 0;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+header.top h1{font-family:var(--serif);font-weight:900;font-size:28px;margin:0;letter-spacing:-.01em}
+.sync{font-size:13px;color:var(--muted)}
+h2{font-family:var(--serif);font-size:22px;margin:28px 0 10px}
+h3{font-size:15px;color:var(--muted);font-weight:700;margin:22px 0 8px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+
+/* Tab bar */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs button{background:none;border:0;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;color:var(--muted)}
+nav.tabs button .ic{font-size:22px;line-height:1}
+nav.tabs button[aria-selected="true"]{color:var(--ink);font-weight:700}
+nav.tabs button[aria-selected="true"] .ic{transform:translateY(-1px)}
+section[hidden]{display:none}
+
+/* Baby card */
+.idcard{position:relative;border-radius:22px;padding:22px 20px 18px;color:var(--card-ink);
+  background:linear-gradient(150deg,var(--card-a),var(--card-b));overflow:hidden}
+.idcard::after{content:"";position:absolute;inset:auto -60px -80px auto;width:220px;height:220px;border-radius:50%;
+  border:28px solid rgba(255,255,255,.06)}
+.idcard .name{font-family:var(--serif);font-weight:900;font-size:34px;line-height:1.1;margin:0}
+.idcard .sub{opacity:.8;font-size:15px;margin-top:4px}
+.idcard .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-top:20px;position:relative;z-index:1}
+.idcard .k{font-size:12.5px;opacity:.7}
+.idcard .v{font-size:17px;font-weight:600;word-break:break-word}
+.idrow{grid-column:1/-1;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px}
+.idrow .v{font-family:var(--sans);font-size:22px;letter-spacing:.08em;direction:ltr;flex:1;text-align:right}
+.iconbtn{background:rgba(255,255,255,.12);border:0;color:inherit;border-radius:10px;padding:6px 10px;font-size:14px}
+.age{display:inline-block;margin-top:12px;background:var(--gold);color:#1C2742;font-weight:700;border-radius:999px;padding:3px 12px;font-size:14px}
+
+.brit-strip{margin-top:14px;display:flex;align-items:center;gap:14px;background:var(--gold-soft);border-radius:16px;padding:14px 16px}
+.brit-strip .num{font-family:var(--serif);font-weight:900;font-size:40px;line-height:1;color:var(--gold);min-width:48px;text-align:center}
+.brit-strip .t{font-weight:700}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 16px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--muted)}
+.kv .v{font-weight:600;text-align:left}
+.kv a{color:inherit}
+
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.gold{background:var(--gold);color:#1C2742}
+.btn.full{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Progress */
+.progress{display:flex;align-items:center;gap:12px;margin:6px 0 4px}
+.bar{flex:1;height:8px;background:var(--sky);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--done);border-radius:99px;transition:width .3s}
+
+/* Task list */
+.list{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.list li{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+.chk{appearance:none;-webkit-appearance:none;flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--line);margin:1px 0 0;display:grid;place-items:center;background:var(--surface)}
+.chk:checked{background:var(--done);border-color:var(--done)}
+.chk:checked::after{content:"✓";color:#fff;font-weight:700;font-size:16px}
+.list .body{flex:1;min-width:0}
+.list .title{font-weight:600}
+.list li.done .title{color:var(--muted)}
+.list .meta{font-size:14px;color:var(--muted);margin-top:2px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:2px 10px;font-size:13px;color:var(--muted);white-space:nowrap}
+.chip.me{background:var(--sky);color:var(--ink);border-color:transparent}
+.chip.her{background:var(--gold-soft);color:var(--ink);border-color:transparent}
+.more{background:none;border:0;color:var(--muted);font-size:20px;padding:0 4px;line-height:1}
+.badge{display:inline-block;font-size:12.5px;font-weight:700;border-radius:6px;padding:1px 7px;margin-inline-start:6px;vertical-align:1px}
+.badge.late{background:var(--danger);color:#fff}
+.badge.soon{background:var(--gold);color:#1C2742}
+.addrow{display:flex;gap:8px;margin-top:10px}
+.addrow input{flex:1;min-width:0}
+
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=time],input[type=number],input[type=tel],select,textarea{
+  width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+label.f{display:block;margin-bottom:12px}
+label.f span{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inline-check{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+
+/* Log */
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.quick button{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:600;font-size:14.5px}
+.quick button .ic{font-size:26px}
+.quick button:active{background:var(--sky)}
+.since{display:flex;gap:10px;margin:14px 0 4px}
+.since div{flex:1;background:var(--sky);border-radius:14px;padding:10px 12px}
+.since b{display:block;font-family:var(--serif);font-size:22px}
+.loglist li{align-items:center}
+.loglist .time{font-variant-numeric:tabular-nums;font-weight:700;min-width:48px}
+
+dialog{border:0;border-radius:20px;padding:0;width:min(520px,calc(100% - 24px));max-height:calc(100% - 40px);background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(10,15,30,.5)}
+dialog .dh{position:sticky;top:0;background:var(--bg);padding:16px 18px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+dialog .dh h2{margin:0;font-size:20px}
+dialog .db{padding:14px 18px 18px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.show{opacity:1}
+.note{font-size:14px;color:var(--muted);margin-top:10px}
+.empty{padding:18px;text-align:center;color:var(--muted)}
+.list:empty{padding:14px;text-align:center;color:var(--muted);font-size:15px}
+.list:empty::after{content:"אין משימות בקבוצה הזאת"}
+.grow{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+.grow input{flex:1;min-width:0}
+.sq{flex:none;width:40px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px}
+.sq:disabled{opacity:.35}
+.addrow select{width:auto;max-width:42%}
+.hr{display:flex;align-items:center;gap:6px}
+.gear{background:none;border:0;font-size:20px;padding:4px 6px;line-height:1}
+#gate{position:fixed;inset:0;z-index:60;background:var(--bg);overflow:auto;padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px))}
+#gate[hidden]{display:none}
+.gatebox{max-width:420px;margin:6vh auto 0}
+.gatebox h1{font-family:var(--serif);font-weight:900;font-size:34px;margin:0 0 6px}
+.err{color:var(--danger);min-height:1.4em;font-size:15px;margin:4px 0 10px}
+.code{font-size:26px;font-weight:700;letter-spacing:.12em;direction:ltr;text-align:center;background:var(--sky);border-radius:14px;padding:12px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 id="appTitle">התינוק שלנו</h1>
+  <div class="hr"><span class="sync" id="sync">שומר במכשיר</span><button class="gear" id="gear" aria-label="הגדרות">⚙️</button></div>
+</header>
+<div id="gate" hidden><div class="gatebox" id="gateBox"></div></div>
+
+<main>
+  <!-- Baby -->
+  <section id="tab-baby" role="tabpanel">
+    <div id="cardWrap"></div>
+    <div id="britStrip"></div>
+    <h2>פרטים נוספים</h2>
+    <div class="panel" id="moreInfo"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="editBaby">עריכת פרטים</button>
+      <button class="btn ghost" id="shareCard">שיתוף הפרטים</button>
+    </div>
+    <h2>מעקב גדילה</h2>
+    <div id="growth"></div>
+    <button class="btn ghost" id="addGrowth" style="margin-top:10px">הוספת שקילה</button>
+  </section>
+
+  <!-- Brit -->
+  <section id="tab-brit" role="tabpanel" hidden>
+    <div id="britHead"></div>
+    <div id="britLists"></div>
+    <div class="addrow">
+      <input type="text" id="newTask" placeholder="משימה חדשה" aria-label="משימה חדשה">
+      <select id="newGroup" aria-label="קבוצה"></select>
+      <button class="btn" id="addTask">הוספה</button>
+    </div>
+    <p class="note">הקשה על "מי?" מחליפה בין אני, אשתי, או אף אחד. הקשה על ⋯ לעריכה או הערה.</p>
+  </section>
+
+  <!-- Checks -->
+  <section id="tab-checks" role="tabpanel" hidden>
+    <h2 style="margin-top:6px">בדיקות וחיסונים</h2>
+    <div id="checksBody"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="addCheck">הוספת תור או בדיקה</button>
+    </div>
+    <p class="note">המועדים מחושבים לפי תאריך הלידה והם משוערים. כדאי לאמת מול טיפת חלב ורופא/ת הילדים.</p>
+  </section>
+
+  <!-- Log -->
+  <section id="tab-log" role="tabpanel" hidden>
+    <h2 style="margin-top:6px">יומן יומי</h2>
+    <div class="quick" id="quick"></div>
+    <div class="since" id="since"></div>
+    <h3 id="todayTitle">היום</h3>
+    <div id="logBody"></div>
+  </section>
+</main>
+
+<nav class="tabs" role="tablist">
+  <div class="in">
+    <button role="tab" data-tab="baby" aria-selected="true"><span class="ic">👶</span>התינוק</button>
+    <button role="tab" data-tab="brit" aria-selected="false"><span class="ic">✡️</span>ברית</button>
+    <button role="tab" data-tab="checks" aria-selected="false"><span class="ic">🩺</span>בדיקות</button>
+    <button role="tab" data-tab="log" aria-selected="false"><span class="ic">🍼</span>יומן</button>
+  </div>
+</nav>
+
+<dialog id="dlg"><div class="dh"><h2 id="dlgTitle"></h2><button class="more" id="dlgClose" aria-label="סגירה">✕</button></div><div class="db" id="dlgBody"></div></dialog>
+<dialog id="cdlg"><div class="db"><p id="cmsg" style="margin:4px 0 16px;font-weight:600"></p>
+  <div class="row"><button class="btn" id="cok">אישור</button><button class="btn ghost" id="ccancel">ביטול</button></div></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script>
+(function(){
+"use strict";
+const LS_KEY = "baby-app-state-v1";
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+
+/* ---------- defaults ---------- */
+const BRIT_DEFAULT = [
+  ["מוהל וטקס","לתאם מוהל"],["מוהל וטקס","לשאול את המוהל מה להכין (גזה, וזלין, כרית)"],["מוהל וטקס","לבחור סנדק"],
+  ["מוהל וטקס","לבחור קוואטער וקוואטערין"],["מוהל וטקס","לחלק כיבודים (כסא אליהו, ברכות, קריאת השם)"],
+  ["מוהל וטקס","להחליט על השם"],["מוהל וטקס","יין וכוס לברכה"],
+  ["מקום וכיבוד","לסגור מקום (בית כנסת, אולם, בית)"],["מקום וכיבוד","קייטרינג או כיבוד"],["מקום וכיבוד","שתייה וכלים חד פעמיים"],
+  ["מקום וכיבוד","צלם"],
+  ["הזמנות","רשימת מוזמנים"],["הזמנות","לשלוח הזמנה בוואטסאפ"],["הזמנות","להודיע לרב ולבית הכנסת"],
+  ["לתינוק ולאמא","בגד לברית וכיפה"],["לתינוק ולאמא","תיק החתלה מוכן"],["לתינוק ולאמא","פינה שקטה להנקה במקום"],
+  ["אחרי הברית","רישום השם במשרד הפנים"],["אחרי הברית","עדכון ספח בתעודת הזהות"],["אחרי הברית","רישום בקופת החולים"],
+  ["אחרי הברית","לבדוק שמענק הלידה התקבל (ביטוח לאומי)"]
+].map(([group,title]) => ({id:uid(), group, title, who:"", done:false, note:""}));
+
+const CHECKS_DEFAULT = [
+  ["baby","חיסון צהבת B (מנה 1) וויטמין K",0,"בבית החולים"],
+  ["baby","בדיקת סקר ילודים (דקירה בעקב)",1,"בבית החולים"],
+  ["baby","בדיקת שמיעה",1,"בבית החולים"],
+  ["baby","ביקורת אצל רופא/ת ילדים",7,""],
+  ["baby","ביקור ראשון בטיפת חלב",10,"בשבועיים הראשונים"],
+  ["baby","חיסון צהבת B (מנה 2) בגיל חודש",30,"טיפת חלב"],
+  ["baby","אולטרסאונד מפרקי ירכיים",42,"אם הומלץ"],
+  ["baby","חיסוני גיל חודשיים",60,"טיפת חלב"],
+  ["baby","חיסוני גיל 4 חודשים",120,"טיפת חלב"],
+  ["baby","חיסוני גיל 6 חודשים",180,"טיפת חלב"],
+  ["mom","ביקורת אצל רופא/ת נשים",42,"כשישה שבועות אחרי הלידה"]
+].map(([who,title,offset,note]) => ({id:uid(), who, title, offset, date:"", time:"", done:false, doneDate:"", note}));
+
+function defaults(){
+  return {
+    baby:{name:"",hebName:"",idNum:"",birthDate:"",birthTime:"",afterSunset:false,britOverride:"",weight:"",length:"",head:"",blood:"",
+      hospital:"",hmo:"",pediatrician:"",pediatricianPhone:"",tipat:"",tipatPhone:"",father:"",mother:"",notes:""},
+    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], log:[], updatedAt:0
+  };
+}
+
+/* ---------- state + storage ---------- */
+let state;
+try { const raw = localStorage.getItem(LS_KEY); state = raw ? JSON.parse(raw) : null; } catch(e){ state = null; }
+state = Object.assign(defaults(), state || {});
+state.baby = Object.assign(defaults().baby, state.baby || {});
+
+/* ---------- sync with Supabase ---------- */
+const CFG = window.APP_CONFIG || {};
+const FAM_KEY = "baby-app-family-v1";
+let sb = null, familyId = null;
+let writing = false, pending = false, timer = null, needLoad = false, loadTimer = null, epoch = 0, started = false;
+let synced = {}, existsMap = {}, logIds = new Set();
+
+function setSync(t){ $("#sync").textContent = t; }
+function canon(v){
+  if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
+  if (v && typeof v === "object") return "{" + Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+":"+canon(v[k])).join(",") + "}";
+  return JSON.stringify(v === undefined ? null : v);
+}
+const clean = v => JSON.parse(JSON.stringify(v));
+const SECTIONS = {
+  baby:   {get:()=>({baby:state.baby}),
+           set:d=>{ state.baby = Object.assign(defaults().baby, d.baby||{}); }},
+  brit:   {get:()=>({brit:state.brit, groups:state.groups, afterGroup:state.afterGroup}),
+           set:d=>{ if(Array.isArray(d.brit)) state.brit=d.brit; state.groups=Array.isArray(d.groups)?d.groups:null; state.afterGroup=(typeof d.afterGroup==="string")?d.afterGroup:"אחרי הברית"; }},
+  checks: {get:()=>({checks:state.checks}),
+           set:d=>{ if(Array.isArray(d.checks)) state.checks=d.checks; }},
+  growth: {get:()=>({growth:state.growth}),
+           set:d=>{ state.growth = Array.isArray(d.growth)?d.growth:[]; }}
+};
+function persistLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){} }
+function save(){
+  state.updatedAt = Date.now();
+  if (state.log.length > 600) state.log = state.log.slice(-600);
+  persistLocal();
+  if (sb && familyId){ setSync("שומר…"); scheduleFlush(); }
+}
+function scheduleFlush(){ clearTimeout(timer); timer = setTimeout(()=>{ timer = null; flush(); }, 500); }
+function scheduleLoad(){ clearTimeout(loadTimer); loadTimer = setTimeout(load, 300); }
+
+async function flush(){
+  if (!sb || !familyId) return;
+  if (writing){ pending = true; return; }
+  writing = true;
+  let ok = true, wrote = false, seeded = false;
+  try {
+    for (const [k,s] of Object.entries(SECTIONS)){
+      const data = clean(s.get()), c = canon(data);
+      if (c === synced[k]) continue;
+      if (!wrote){ wrote = true; epoch++; }
+      synced[k] = c;
+      let r;
+      if (existsMap[k]) r = await sb.from("app_state").upsert({family_id:familyId, section:k, data, updated_at:new Date().toISOString()}, {onConflict:"family_id,section"});
+      else r = await sb.from("app_state").upsert({family_id:familyId, section:k, data}, {onConflict:"family_id,section", ignoreDuplicates:true});
+      if (r.error){ synced[k] = undefined; ok = false; }
+      else if (!existsMap[k]){ existsMap[k] = true; seeded = true; }
+    }
+    const cur = new Map(state.log.map(x=>[x.id,x]));
+    const toAdd = state.log.filter(x=>!logIds.has(x.id));
+    if (toAdd.length){
+      if (!wrote){ wrote = true; epoch++; }
+      const r = await sb.from("log_entries").upsert(toAdd.map(x=>({id:x.id, family_id:familyId, t:x.t, type:x.type, note:x.note||""})), {onConflict:"id"});
+      if (r.error) ok = false; else toAdd.forEach(x=>logIds.add(x.id));
+    }
+    const toDel = [...logIds].filter(id=>!cur.has(id));
+    if (toDel.length){
+      if (!wrote){ wrote = true; epoch++; }
+      const r = await sb.from("log_entries").delete().in("id", toDel);
+      if (r.error) ok = false; else toDel.forEach(id=>logIds.delete(id));
+    }
+  } catch(e){ ok = false; }
+  writing = false;
+  if (!ok){ setSync("אין חיבור, נשמר במכשיר"); setTimeout(scheduleFlush, 8000); }
+  else if (wrote) setSync("נשמר ומסונכרן ✓");
+  if (seeded) needLoad = true;
+  if (pending){ pending = false; scheduleFlush(); }
+  if (needLoad){ needLoad = false; scheduleLoad(); }
+}
+
+async function load(){
+  if (!sb || !familyId) return;
+  if (writing || timer){ needLoad = true; return; }
+  const myEpoch = epoch;
+  let s, l;
+  try {
+    [s, l] = await Promise.all([
+      sb.from("app_state").select("section,data").eq("family_id", familyId),
+      sb.from("log_entries").select("id,t,type,note").eq("family_id", familyId).order("t", {ascending:true}).limit(1000)
+    ]);
+  } catch(e){ setSync("אין חיבור, נשמר במכשיר"); return; }
+  if (s.error || l.error){ setSync("אין חיבור, נשמר במכשיר"); return; }
+  if (writing || timer || myEpoch !== epoch){ needLoad = false; scheduleLoad(); return; }
+  let changed = false;
+  const seen = {};
+  s.data.forEach(r => {
+    const sec = SECTIONS[r.section]; if (!sec) return;
+    seen[r.section] = true; existsMap[r.section] = true;
+    const c = canon(r.data);
+    if (c === synced[r.section]) return;
+    sec.set(clean(r.data)); synced[r.section] = c; changed = true;
+  });
+  Object.keys(SECTIONS).forEach(k => { if (!seen[k]) existsMap[k] = false; });
+  // log merge
+  const remote = l.data.map(x => ({id:x.id, t:Number(x.t), type:x.type, note:x.note||""}));
+  const rids = new Set(remote.map(x=>x.id));
+  const localIds = new Set(state.log.map(x=>x.id));
+  const merged = new Map();
+  remote.forEach(x => { if (logIds.has(x.id) && !localIds.has(x.id)) return; merged.set(x.id, x); });
+  state.log.forEach(x => { if (!logIds.has(x.id) && !rids.has(x.id)) merged.set(x.id, x); });
+  const next = [...merged.values()].sort((a,b)=>a.t-b.t);
+  if (canon(next) !== canon(state.log)){ state.log = next; changed = true; }
+  logIds = new Set(rids);
+  if (changed){ persistLocal(); renderAll(); }
+  scheduleFlush();
+  setSync("מסונכרן ✓");
+}
+
+function startSync(){
+  if (started) return; started = true;
+  load();
+  try {
+    sb.channel("family-" + familyId)
+      .on("postgres_changes", {event:"*", schema:"public", table:"app_state", filter:"family_id=eq."+familyId}, scheduleLoad)
+      .on("postgres_changes", {event:"*", schema:"public", table:"log_entries"}, scheduleLoad)
+      .subscribe();
+  } catch(e){}
+  setInterval(()=>{ if(!document.hidden) scheduleLoad(); }, 30000);
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) scheduleLoad(); });
+  window.addEventListener("online", scheduleLoad);
+}
+
+/* ---------- sign in / family ---------- */
+function showGate(html){ $("#gateBox").innerHTML = html; $("#gate").hidden = false; }
+function hideGate(){ $("#gate").hidden = true; $("#gateBox").innerHTML = ""; }
+function authErr(m){
+  m = String((m && m.message) || m || "");
+  if (/Invalid login/i.test(m)) return "אימייל או סיסמה שגויים";
+  if (/already registered|already been registered/i.test(m)) return "כבר יש חשבון עם המייל הזה. נסו להתחבר.";
+  if (/at least 6/i.test(m)) return "הסיסמה חייבת להיות לפחות 6 תווים";
+  if (/not confirmed/i.test(m)) return "צריך לאשר את המייל שנשלח אליכם ואז להתחבר";
+  if (/rate limit|too many|security purposes/i.test(m)) return "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.";
+  if (/valid email|invalid.*email|Unable to validate email/i.test(m)) return "כתובת המייל לא תקינה";
+  if (/fetch|network|Failed/i.test(m)) return "אין חיבור לאינטרנט";
+  return "משהו השתבש: " + m;
+}
+function showSetupMissing(){
+  showGate(`<h1>חסר חיבור ל-Supabase</h1><p class="muted">צריך למלא את הקובץ <b dir="ltr">config.js</b> עם הכתובת והמפתח של הפרויקט שלכם ב-Supabase. הפרטים בקובץ README.</p>`);
+}
+function showAuth(msg){
+  showGate(`<h1>התינוק שלנו</h1>
+    <p class="muted">כניסה לחשבון. שניכם נכנסים עם חשבון משלכם ורואים את אותם נתונים.</p>
+    <label class="f"><span>אימייל</span><input type="email" id="aE" autocomplete="email" inputmode="email" dir="ltr"></label>
+    <label class="f"><span>סיסמה</span><input type="password" id="aP" autocomplete="current-password" dir="ltr"></label>
+    <p class="err" id="aM" role="alert">${esc(msg||"")}</p>
+    <div class="row"><button class="btn" id="aIn">כניסה</button><button class="btn ghost" id="aUp">יצירת חשבון</button></div>`);
+  const E=$("#aE"), P=$("#aP"), M=$("#aM"), bi=$("#aIn"), bu=$("#aUp");
+  const busy = v => { bi.disabled = bu.disabled = v; };
+  const creds = () => { const e=E.value.trim(), p=P.value; if(!e||!p){ M.textContent="צריך למלא אימייל וסיסמה"; return null; } return {email:e, password:p}; };
+  const doIn = async () => { const c=creds(); if(!c) return; busy(true); M.textContent="";
+    try { const {error}=await sb.auth.signInWithPassword(c); if(error){ M.textContent=authErr(error); busy(false); return; } await afterLogin(); }
+    catch(e){ M.textContent=authErr(e); busy(false); } };
+  bi.onclick = doIn;
+  P.addEventListener("keydown", e=>{ if(e.key==="Enter") doIn(); });
+  bu.onclick = async () => { const c=creds(); if(!c) return; busy(true); M.textContent="";
+    try { const {data,error}=await sb.auth.signUp(c); if(error){ M.textContent=authErr(error); busy(false); return; }
+      if (data.session) await afterLogin(); else { M.textContent="נשלח אליכם מייל אישור. אחרי האישור חוזרים לכאן ומתחברים."; busy(false); } }
+    catch(e){ M.textContent=authErr(e); busy(false); } };
+}
+function showFamily(msg){
+  showGate(`<h1>עוד צעד קטן</h1>
+    <p class="muted">אחד מכם יוצר את המשפחה, והשני מצטרף עם קוד הזמנה.</p>
+    <button class="btn full" id="fNew">יצירת משפחה חדשה</button>
+    <h3>או הצטרפות עם קוד</h3>
+    <label class="f"><input type="text" id="fC" dir="ltr" placeholder="קוד הזמנה" autocapitalize="characters" autocomplete="off"></label>
+    <p class="err" id="fM" role="alert">${esc(msg||"")}</p>
+    <div class="row"><button class="btn ghost" id="fJoin">הצטרפות</button><button class="btn ghost" id="fOut">יציאה</button></div>`);
+  const M=$("#fM");
+  $("#fNew").onclick = async () => { M.textContent="";
+    const r = await sb.rpc("create_family"); if(r.error){ M.textContent=authErr(r.error); return; } await afterLogin(); };
+  $("#fJoin").onclick = async () => { const code=$("#fC").value.trim(); if(!code){ M.textContent="צריך להקליד קוד"; return; } M.textContent="";
+    const r = await sb.rpc("join_family", {code}); if(r.error){ M.textContent = /invalid code/i.test(r.error.message||"") ? "הקוד לא נמצא. בדקו שהקלדתם נכון." : authErr(r.error); return; } await afterLogin(); };
+  $("#fOut").onclick = signOut;
+}
+async function afterLogin(){
+  let fam = null;
+  try {
+    const r = await sb.rpc("my_family");
+    if (r.error) throw r.error;
+    fam = (r.data && r.data[0]) || null;
+  } catch(e){
+    // offline: continue with the family we remembered
+    let cached = null; try { cached = localStorage.getItem(FAM_KEY); } catch(_){}
+    if (cached){ familyId = cached; hideGate(); startSync(); setSync("אין חיבור, נשמר במכשיר"); return; }
+    showAuth(authErr(e)); return;
+  }
+  if (!fam){ showFamily(); return; }
+  familyId = fam.id;
+  try { localStorage.setItem(FAM_KEY, familyId); } catch(e){}
+  hideGate(); startSync();
+}
+async function signOut(){
+  try { await sb.auth.signOut(); } catch(e){}
+  try { localStorage.removeItem(LS_KEY); localStorage.removeItem(FAM_KEY); } catch(e){}
+  location.reload();
+}
+$("#gear").onclick = async () => {
+  let email = "", code = "";
+  try { const {data} = await sb.auth.getSession(); email = (data.session && data.session.user.email) || ""; } catch(e){}
+  try { const r = await sb.rpc("my_family"); code = (r.data && r.data[0] && r.data[0].invite_code) || ""; } catch(e){}
+  openDlg("הגדרות", `
+    <p class="small muted" style="margin-top:0">מחובר/ת כ־<span dir="ltr">${esc(email)}</span></p>
+    <h3 style="margin-top:6px">קוד הזמנה לבן או בת הזוג</h3>
+    ${code ? `<div class="code" id="invCode">${esc(code)}</div>
+    <p class="note">בן או בת הזוג יוצרים חשבון, ובמסך "עוד צעד קטן" מקלידים את הקוד.</p>
+    <button class="btn ghost full" id="copyCode">העתקת הקוד</button>` : `<p class="note">אין חיבור כרגע.</p>`}
+    <div style="height:18px"></div>
+    <button class="btn ghost full" id="outBtn" style="color:var(--danger)">יציאה מהחשבון</button>`, body => {
+      const cc = $("#copyCode", body); if (cc) cc.onclick = async () => { try { await navigator.clipboard.writeText(code); toast("הקוד הועתק"); } catch(e){ toast("לא הצלחתי להעתיק"); } };
+      $("#outBtn", body).onclick = async () => { if (await askConfirm("לצאת מהחשבון? הנתונים נשמרים בענן ויחזרו אחרי כניסה.", "יציאה")) signOut(); };
+    });
+};
+async function boot(){
+  if (!window.supabase || !CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY || /YOUR-PROJECT/.test(CFG.SUPABASE_URL)){ showSetupMissing(); return; }
+  sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, {auth:{persistSession:true, autoRefreshToken:true}});
+  let session = null;
+  try { const {data} = await sb.auth.getSession(); session = data.session; } catch(e){}
+  if (!session){ showAuth(); return; }
+  let cached = null; try { cached = localStorage.getItem(FAM_KEY); } catch(e){}
+  if (cached){ familyId = cached; hideGate(); startSync(); afterLogin(); }
+  else await afterLogin();
+  sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_OUT" && familyId){ familyId = null; location.reload(); } });
+}
+
+/* ---------- dates ---------- */
+function parseD(s){ if(!s) return null; const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function today0(){ const t=new Date(); t.setHours(0,0,0,0); return t; }
+function diffDays(a,b){ return Math.round((a-b)/86400000); }
+const fmtShort = d => d.toLocaleDateString("he-IL",{weekday:"short",day:"numeric",month:"numeric"});
+const fmtLong = d => d.toLocaleDateString("he-IL",{day:"numeric",month:"long",year:"numeric"});
+function hebDate(d){ try{ return new Intl.DateTimeFormat("he-IL-u-ca-hebrew",{day:"numeric",month:"long",year:"numeric"}).format(d); }catch(e){ return ""; } }
+function britDate(){
+  const b = state.baby;
+  if (b.britOverride) return parseD(b.britOverride);
+  const bd = parseD(b.birthDate); if(!bd) return null;
+  return addDays(bd, 7 + (b.afterSunset ? 1 : 0));
+}
+function ageText(){
+  const bd = parseD(state.baby.birthDate); if(!bd) return "";
+  const days = diffDays(today0(), bd);
+  if (days < 0) return "";
+  if (days === 0) return "נולד היום";
+  if (days === 1) return "בן יום";
+  if (days < 14) return "בן " + days + " ימים";
+  if (days < 60){ const w=Math.floor(days/7), r=days%7; return "בן " + w + " שבועות" + (r? " ו־"+r+" ימים":""); }
+  const m = Math.floor(days/30.44); return "בן " + m + " חודשים";
+}
+
+/* ---------- toast ---------- */
+let tt; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("show"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("show"),1800); }
+
+/* ---------- dialog ---------- */
+const dlg = $("#dlg");
+function openDlg(title, html, onReady){ $("#dlgTitle").textContent=title; $("#dlgBody").innerHTML=html; if(dlg.showModal) dlg.showModal(); else dlg.setAttribute("open",""); onReady && onReady($("#dlgBody")); }
+function closeDlg(){ if(dlg.close) dlg.close(); else dlg.removeAttribute("open"); }
+$("#dlgClose").onclick = closeDlg;
+dlg.addEventListener("click", e => { if (e.target === dlg) closeDlg(); });
+
+function askConfirm(msg, okText){
+  return new Promise(res=>{
+    const d=$("#cdlg"); let done=false;
+    $("#cmsg").textContent=msg; $("#cok").textContent=okText||"אישור";
+    const fin=v=>{ if(done) return; done=true; try{ d.close(); }catch(e){} res(v); };
+    $("#cok").onclick=()=>fin(true); $("#ccancel").onclick=()=>fin(false); d.onclose=()=>fin(false);
+    d.showModal();
+  });
+}
+/* ---------- tabs ---------- */
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x===b));
+  document.querySelectorAll("main > section").forEach(s => s.hidden = s.id !== "tab-"+b.dataset.tab);
+  window.scrollTo(0,0);
+  try{ localStorage.setItem("baby-app-tab", b.dataset.tab); }catch(e){}
+});
+
+/* ---------- BABY ---------- */
+let idShown = false;
+function renderBaby(){
+  const b = state.baby;
+  $("#appTitle").textContent = b.hebName || b.name ? "שלום, " + (b.hebName || b.name) : "התינוק שלנו";
+  const bd = parseD(b.birthDate);
+  const idDisp = b.idNum ? (idShown ? b.idNum : "•••••" + b.idNum.slice(-4)) : "—";
+  $("#cardWrap").innerHTML = `
+  <div class="idcard">
+    <p class="name">${esc(b.hebName || b.name || "בן יקר")}</p>
+    <div class="sub">${b.father||b.mother ? "בן ל"+esc([b.father,b.mother].filter(Boolean).join(" ו")) : "הוסיפו שם ופרטים בעריכה"}</div>
+    ${ageText() ? `<span class="age">${ageText()}</span>`:""}
+    <div class="grid">
+      <div class="idrow"><div><div class="k">מספר זהות</div></div>
+        <div class="v">${esc(idDisp)}</div>
+        ${b.idNum?`<button class="iconbtn" id="toggleId">${idShown?"הסתרה":"הצגה"}</button><button class="iconbtn" id="copyId">העתקה</button>`:""}
+      </div>
+      <div><div class="k">תאריך לידה</div><div class="v">${bd? fmtLong(bd):"—"}</div></div>
+      <div><div class="k">תאריך עברי</div><div class="v">${bd? esc(hebDate(bd)):"—"}</div></div>
+      <div><div class="k">שעת לידה</div><div class="v">${esc(b.birthTime||"—")}</div></div>
+      <div><div class="k">משקל לידה</div><div class="v">${b.weight? esc(b.weight)+" ק״ג":"—"}</div></div>
+    </div>
+  </div>`;
+  const tg=$("#toggleId"); if(tg) tg.onclick=()=>{ idShown=!idShown; renderBaby(); };
+  const cp=$("#copyId"); if(cp) cp.onclick=async()=>{ try{ await navigator.clipboard.writeText(b.idNum); toast("מספר הזהות הועתק"); }catch(e){ toast("לא הצלחתי להעתיק"); } };
+
+  const bdt = britDate();
+  if (bdt){
+    const d = diffDays(bdt, today0());
+    let big, line;
+    if (d > 0){ big = d; line = d===1 ? "הברית מחר" : "ימים עד הברית"; }
+    else if (d === 0){ big = "🎉"; line = "הברית היום! מזל טוב"; }
+    else { big = "✓"; line = "הברית הייתה"; }
+    const openTasks = state.brit.filter(t=>!t.done && t.group!==state.afterGroup).length;
+    $("#britStrip").innerHTML = `<div class="brit-strip"><div class="num">${big}</div><div><div class="t">${line}</div>
+      <div class="small muted">${fmtShort(bdt)}, ${esc(hebDate(bdt))}${b.britOverride?" (נקבע ידנית)":""}</div>
+      ${d>=0 && openTasks? `<div class="small">${openTasks} משימות פתוחות לברית</div>`:""}</div></div>`;
+  } else $("#britStrip").innerHTML = "";
+
+  const rows = [
+    ["אורך", b.length && b.length+" ס״מ"],["היקף ראש", b.head && b.head+" ס״מ"],["סוג דם", b.blood],
+    ["בית חולים", b.hospital],["קופת חולים", b.hmo],
+    ["רופא/ת ילדים", b.pediatrician, b.pediatricianPhone],["טיפת חלב", b.tipat, b.tipatPhone],["הערות", b.notes]
+  ].filter(r=>r[1]||r[2]);
+  $("#moreInfo").innerHTML = rows.length ? rows.map(([k,v,ph])=>`<div class="kv"><span class="k">${k}</span><span class="v">${esc(v||"")}${ph?` <a href="tel:${esc(ph.replace(/[^\d+]/g,""))}">📞 ${esc(ph)}</a>`:""}</span></div>`).join("")
+    : `<div class="empty">עוד אין פרטים. לחצו על "עריכת פרטים".</div>`;
+
+  const g = state.growth.slice().sort((a,b)=>a.date<b.date?1:-1);
+  $("#growth").innerHTML = g.length ? `<ul class="list">${g.map(x=>`<li><div class="body"><div class="title">${esc(x.weight)} ק״ג${x.length?`, ${esc(x.length)} ס״מ`:""}</div><div class="meta">${fmtLong(parseD(x.date))}${x.note?", "+esc(x.note):""}</div></div><button class="more" data-delg="${x.id}" aria-label="מחיקה">🗑</button></li>`).join("")}</ul>`
+    : `<div class="panel"><div class="empty">שקילה מטיפת חלב או מהרופא? אפשר לרשום כאן.</div></div>`;
+  document.querySelectorAll("[data-delg]").forEach(btn=>btn.onclick=async()=>{ if(await askConfirm("למחוק את השקילה?","מחיקה")){ state.growth=state.growth.filter(x=>x.id!==btn.dataset.delg); save(); renderBaby(); }});
+}
+$("#addGrowth").onclick = () => openDlg("הוספת שקילה", `
+  <label class="f"><span>תאריך</span><input type="date" id="gD" value="${iso(new Date())}"></label>
+  <div class="two"><label class="f"><span>משקל (ק״ג)</span><input type="number" step="0.01" inputmode="decimal" id="gW"></label>
+  <label class="f"><span>אורך (ס״מ)</span><input type="number" step="0.1" inputmode="decimal" id="gL"></label></div>
+  <label class="f"><span>הערה</span><input type="text" id="gN" placeholder="למשל: טיפת חלב"></label>
+  <button class="btn full" id="gS">שמירה</button>`, body => {
+    $("#gS",body).onclick = () => { const w=$("#gW",body).value; if(!w){ $("#gW",body).focus(); return; }
+      state.growth.push({id:uid(), date:$("#gD",body).value||iso(new Date()), weight:w, length:$("#gL",body).value, note:$("#gN",body).value}); save(); renderBaby(); closeDlg(); toast("השקילה נשמרה"); };
+  });
+
+$("#editBaby").onclick = () => {
+  const b = state.baby;
+  const f = (id,label,type="text",extra="") => `<label class="f"><span>${label}</span><input type="${type}" id="b_${id}" value="${esc(b[id])}" ${extra}></label>`;
+  openDlg("פרטי התינוק", `
+    ${f("hebName","שם (אחרי הברית)")}
+    ${f("idNum","מספר זהות","text",'inputmode="numeric" maxlength="9" autocomplete="off"')}
+    <div class="two">${f("birthDate","תאריך לידה","date")}${f("birthTime","שעת לידה","time")}</div>
+    <label class="inline-check"><input type="checkbox" class="chk" id="b_afterSunset" ${b.afterSunset?"checked":""}> נולד אחרי השקיעה (הברית נדחית ביום)</label>
+    ${f("britOverride","תאריך ברית אחר (אם נדחתה)","date")}
+    <div class="two">${f("weight","משקל לידה (ק״ג)","number",'step="0.01" inputmode="decimal"')}${f("length","אורך (ס״מ)","number",'step="0.1" inputmode="decimal"')}</div>
+    <div class="two">${f("head","היקף ראש (ס״מ)","number",'step="0.1" inputmode="decimal"')}${f("blood","סוג דם")}</div>
+    <div class="two">${f("father","שם האב")}${f("mother","שם האם")}</div>
+    ${f("hospital","בית חולים")}${f("hmo","קופת חולים")}
+    <div class="two">${f("pediatrician","רופא/ת ילדים")}${f("pediatricianPhone","טלפון","tel")}</div>
+    <div class="two">${f("tipat","טיפת חלב")}${f("tipatPhone","טלפון","tel")}</div>
+    <label class="f"><span>הערות</span><textarea id="b_notes">${esc(b.notes)}</textarea></label>
+    <button class="btn full" id="saveBaby">שמירת הפרטים</button>`, body => {
+      $("#saveBaby",body).onclick = async () => {
+        const idv = $("#b_idNum",body).value.replace(/\D/g,"");
+        if (idv && !validId(idv) && !(await askConfirm("מספר הזהות לא עובר בדיקת ספרת ביקורת. לשמור בכל זאת?","שמירה"))) return;
+        Object.keys(b).forEach(k => { const el=$("#b_"+k,body); if(!el) return; b[k] = el.type==="checkbox" ? el.checked : el.value.trim(); });
+        b.idNum = idv; save(); renderAll(); closeDlg(); toast("הפרטים נשמרו");
+      };
+    });
+};
+function validId(id){ id=id.padStart(9,"0"); if(id.length!==9) return false; let s=0; for(let i=0;i<9;i++){ let n=+id[i]*((i%2)+1); s+= n>9?n-9:n; } return s%10===0; }
+
+$("#shareCard").onclick = async () => {
+  const b=state.baby, bd=parseD(b.birthDate);
+  const lines=[ b.hebName||b.name ? "שם: "+(b.hebName||b.name):"", b.idNum?"ת.ז: "+b.idNum:"", bd?"תאריך לידה: "+fmtLong(bd)+" ("+hebDate(bd)+")":"",
+    b.birthTime?"שעת לידה: "+b.birthTime:"", b.weight?"משקל לידה: "+b.weight+" ק״ג":"", b.hmo?"קופת חולים: "+b.hmo:"", b.father?"אב: "+b.father:"", b.mother?"אם: "+b.mother:""].filter(Boolean).join("\n");
+  if(!lines){ toast("קודם צריך למלא פרטים"); return; }
+  try{ if(navigator.share){ await navigator.share({text:lines}); } else { await navigator.clipboard.writeText(lines); toast("הפרטים הועתקו"); } }catch(e){}
+};
+
+/* ---------- BRIT ---------- */
+function getGroups(){
+  if(!Array.isArray(state.groups)) state.groups=[];
+  state.brit.forEach(x=>{ if(!x.group) x.group="עוד"; if(!state.groups.includes(x.group)) state.groups.push(x.group); });
+  return state.groups;
+}
+let lastGroup = "";
+let reorderMode = false;
+const WHO = ["","me","her"], WHO_TXT = {"":"מי?","me":"אני","her":"אשתי"};
+function renderBrit(){
+  const t = state.brit, done = t.filter(x=>x.done).length, bdt = britDate();
+  let when = "";
+  if (bdt){ const d=diffDays(bdt,today0()); when = d>1? `בעוד ${d} ימים, ${fmtShort(bdt)}` : d===1? `מחר, ${fmtShort(bdt)}` : d===0? "היום! מזל טוב 🎉" : `התקיימה ב־${fmtShort(bdt)}`; }
+  $("#britHead").innerHTML = `<h2 style="margin-top:6px">משימות לברית</h2>
+    ${when?`<div class="muted" style="margin-bottom:8px">הברית ${when}</div>`:`<div class="muted small" style="margin-bottom:8px">הוסיפו תאריך לידה בכרטיס התינוק כדי לחשב את יום הברית.</div>`}
+    <div class="progress"><div class="bar"><i style="width:${t.length?Math.round(done/t.length*100):0}%"></i></div><span class="small muted">${done} מתוך ${t.length}</span></div>
+    <div class="row" style="margin-top:8px"><button class="btn ghost" id="editGroups">עריכת קבוצות</button>
+      <button class="btn ${reorderMode?"gold":"ghost"}" id="reorderBtn">${reorderMode?"סיום סידור":"סידור משימות"}</button></div>`;
+  $("#editGroups").onclick = manageGroups;
+  $("#reorderBtn").onclick = () => { reorderMode = !reorderMode; renderBrit(); };
+  const groups = getGroups();
+  const sel = $("#newGroup");
+  if (sel){ if(!groups.includes(lastGroup)) lastGroup = groups[0]||""; sel.innerHTML = groups.map(g=>`<option ${g===lastGroup?"selected":""}>${esc(g)}</option>`).join(""); }
+  $("#britLists").innerHTML = groups.map(g => {
+    const items = t.filter(x=>(x.group||"עוד")===g);
+    return `<h3>${esc(g)}</h3><ul class="list">${items.map((x,i)=>`
+    <li class="${x.done?"done":""}"><input type="checkbox" class="chk" data-tc="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
+      <div class="body"><div class="title">${esc(x.title)}</div>${x.note?`<div class="meta">${esc(x.note)}</div>`:""}</div>
+      ${reorderMode
+        ? `<button class="sq" data-mu="${x.id}" ${i===0?"disabled":""} aria-label="הזזה למעלה">↑</button><button class="sq" data-md="${x.id}" ${i===items.length-1?"disabled":""} aria-label="הזזה למטה">↓</button>`
+        : `<button class="chip ${x.who}" data-tw="${x.id}">${WHO_TXT[x.who||""]}</button>
+      <button class="more" data-te="${x.id}" aria-label="עריכה">⋯</button>`}</li>`).join("")}</ul>`;
+  }).join("");
+  document.querySelectorAll("[data-mu]").forEach(c=>c.onclick=()=>moveTask(c.dataset.mu,-1));
+  document.querySelectorAll("[data-md]").forEach(c=>c.onclick=()=>moveTask(c.dataset.md,1));
+  document.querySelectorAll("[data-tc]").forEach(c=>c.onchange=()=>{ const x=t.find(y=>y.id===c.dataset.tc); x.done=c.checked; save(); renderBrit(); renderBaby(); });
+  document.querySelectorAll("[data-tw]").forEach(c=>c.onclick=()=>{ const x=t.find(y=>y.id===c.dataset.tw); x.who=WHO[(WHO.indexOf(x.who||"")+1)%3]; save(); renderBrit(); });
+  document.querySelectorAll("[data-te]").forEach(c=>c.onclick=()=>editTask(c.dataset.te));
+}
+function moveTask(id, dir){
+  const x = state.brit.find(y=>y.id===id); if(!x) return;
+  const g = x.group||"עוד", idxs = [];
+  state.brit.forEach((y,i)=>{ if((y.group||"עוד")===g) idxs.push(i); });
+  const pos = idxs.findIndex(i=>state.brit[i].id===id), to = pos + dir;
+  if (to < 0 || to >= idxs.length) return;
+  const a = idxs[pos], b = idxs[to];
+  [state.brit[a], state.brit[b]] = [state.brit[b], state.brit[a]];
+  save(); renderBrit();
+}
+function editTask(id){
+  const x = state.brit.find(y=>y.id===id); const groups=getGroups();
+  openDlg("עריכת משימה", `
+    <label class="f"><span>משימה</span><input type="text" id="tT" value="${esc(x.title)}"></label>
+    <label class="f"><span>קבוצה</span><select id="tG">${groups.map(g=>`<option ${g===x.group?"selected":""}>${esc(g)}</option>`).join("")}</select></label>
+    <label class="f"><span>הערה (טלפון, מחיר, פרטים)</span><textarea id="tN">${esc(x.note)}</textarea></label>
+    <div class="row"><button class="btn" id="tS">שמירה</button><button class="btn ghost" id="tD" style="color:var(--danger)">מחיקה</button></div>`, body=>{
+      $("#tS",body).onclick=()=>{ x.title=$("#tT",body).value.trim()||x.title; x.group=$("#tG",body).value; x.note=$("#tN",body).value.trim(); save(); renderBrit(); closeDlg(); };
+      $("#tD",body).onclick=async()=>{ if(await askConfirm("למחוק את המשימה?","מחיקה")){ state.brit=state.brit.filter(y=>y.id!==id); save(); renderBrit(); renderBaby(); closeDlg(); } };
+    });
+}
+function manageGroups(){
+  const work = getGroups().map(g=>({orig:g,name:g}));
+  openDlg("עריכת קבוצות", "", body => {
+    const sync = () => body.querySelectorAll("[data-gn]").forEach(inp => { work[+inp.dataset.gn].name = inp.value; });
+    const draw = () => {
+      body.innerHTML = `<p class="note" style="margin-top:0">שינוי שם מתעדכן בכל המשימות של הקבוצה. מחיקת קבוצה מעבירה את המשימות שלה לקבוצה "עוד".</p>`
+        + work.map((w,i)=>`<div class="grow"><input type="text" data-gn="${i}" value="${esc(w.name)}" aria-label="שם קבוצה">
+          <button class="sq" data-up="${i}" ${i===0?"disabled":""} aria-label="הזזה למעלה">↑</button>
+          <button class="sq" data-dn="${i}" ${i===work.length-1?"disabled":""} aria-label="הזזה למטה">↓</button>
+          <button class="sq" data-rm="${i}" aria-label="מחיקה" style="color:var(--danger)">🗑</button></div>`).join("")
+        + `<button class="btn ghost full" id="gAdd" style="margin:4px 0 14px">+ קבוצה חדשה</button><button class="btn full" id="gSave">שמירה</button>`;
+      body.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{ sync(); const i=+b.dataset.up; [work[i-1],work[i]]=[work[i],work[i-1]]; draw(); });
+      body.querySelectorAll("[data-dn]").forEach(b=>b.onclick=()=>{ sync(); const i=+b.dataset.dn; [work[i+1],work[i]]=[work[i],work[i+1]]; draw(); });
+      body.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ sync(); work.splice(+b.dataset.rm,1); draw(); });
+      $("#gAdd",body).onclick=()=>{ sync(); work.push({orig:null,name:""}); draw(); const ins=body.querySelectorAll("[data-gn]"); ins[ins.length-1].focus(); };
+      $("#gSave",body).onclick=()=>{
+        sync();
+        const empty = work.findIndex(w=>!w.name.trim());
+        if (empty>=0){ body.querySelector(`[data-gn="${empty}"]`).focus(); toast("לקבוצה חייב להיות שם"); return; }
+        const map = {}; work.forEach(w=>{ if(w.orig!==null) map[w.orig]=w.name.trim(); });
+        let list = [...new Set(work.map(w=>w.name.trim()))];
+        const orphan = state.brit.some(x=>!(x.group in map));
+        if (orphan && !list.includes("עוד")) list.push("עוד");
+        state.brit.forEach(x=>{ x.group = (x.group in map) ? map[x.group] : "עוד"; });
+        state.afterGroup = (state.afterGroup in map) ? map[state.afterGroup] : "";
+        state.groups = list;
+        save(); renderBrit(); renderBaby(); closeDlg(); toast("הקבוצות נשמרו");
+      };
+    };
+    draw();
+  });
+}
+function addTask(){ const i=$("#newTask"), v=i.value.trim(); if(!v) return; const gs=getGroups(); let g=$("#newGroup").value||gs[0]; if(!g){ g="עוד"; gs.push(g); } lastGroup=g; state.brit.push({id:uid(),group:g,title:v,who:"",done:false,note:""}); i.value=""; save(); renderBrit(); toast("המשימה נוספה"); }
+$("#addTask").onclick = addTask;
+$("#newTask").addEventListener("keydown", e=>{ if(e.key==="Enter") addTask(); });
+
+/* ---------- CHECKS ---------- */
+function checkDate(c){ if(c.date) return parseD(c.date); const bd=parseD(state.baby.birthDate); return bd && c.offset!=null && c.offset!=="" ? addDays(bd, +c.offset) : null; }
+function renderChecks(){
+  const T = today0();
+  const items = state.checks.map(c=>({c, d:checkDate(c)})).sort((a,b)=>(a.c.done-b.c.done) || ((a.d?+a.d:9e15)-(b.d?+b.d:9e15)));
+  const block = (who, title) => {
+    const list = items.filter(x=>x.c.who===who); if(!list.length) return "";
+    return `<h3>${title}</h3><ul class="list">${list.map(({c,d})=>{
+      let badge="";
+      if(!c.done && d){ const n=diffDays(d,T); if(n<0) badge=`<span class="badge late">באיחור</span>`; else if(n<=7) badge=`<span class="badge soon">${n===0?"היום":n===1?"מחר":"בעוד "+n+" ימים"}</span>`; }
+      const meta = c.done ? `בוצע${c.doneDate?" ב־"+fmtShort(parseD(c.doneDate)):""}` : (d? fmtShort(d) + (c.time?" ב־"+c.time:"") : "יחושב לפי תאריך הלידה");
+      return `<li class="${c.done?"done":""}"><input type="checkbox" class="chk" data-cc="${c.id}" ${c.done?"checked":""} aria-label="${esc(c.title)}">
+        <div class="body"><div class="title">${esc(c.title)}${badge}</div><div class="meta">${meta}${c.note?", "+esc(c.note):""}</div></div>
+        <button class="more" data-ce="${c.id}" aria-label="עריכה">⋯</button></li>`;}).join("")}</ul>`;
+  };
+  $("#checksBody").innerHTML = block("baby","לתינוק") + block("mom","לאמא");
+  document.querySelectorAll("[data-cc]").forEach(cb=>cb.onchange=()=>{ const c=state.checks.find(y=>y.id===cb.dataset.cc); c.done=cb.checked; c.doneDate=cb.checked?iso(new Date()):""; save(); renderChecks(); });
+  document.querySelectorAll("[data-ce]").forEach(b=>b.onclick=()=>editCheck(b.dataset.ce));
+}
+function editCheck(id){
+  const isNew = !id;
+  const c = isNew ? {id:uid(),who:"baby",title:"",offset:"",date:"",time:"",done:false,doneDate:"",note:""} : state.checks.find(y=>y.id===id);
+  const d = checkDate(c);
+  openDlg(isNew?"תור או בדיקה חדשים":"עריכה", `
+    <label class="f"><span>מה</span><input type="text" id="cT" value="${esc(c.title)}" placeholder="למשל: תור לרופאת ילדים"></label>
+    <label class="f"><span>עבור</span><select id="cW"><option value="baby" ${c.who==="baby"?"selected":""}>התינוק</option><option value="mom" ${c.who==="mom"?"selected":""}>אמא</option></select></label>
+    <div class="two"><label class="f"><span>תאריך</span><input type="date" id="cD" value="${d?iso(d):""}"></label>
+    <label class="f"><span>שעה</span><input type="time" id="cH" value="${esc(c.time)}"></label></div>
+    <label class="f"><span>הערה (מקום, תוצאה, מה לזכור)</span><textarea id="cN">${esc(c.note)}</textarea></label>
+    <div class="row"><button class="btn" id="cS">שמירה</button>${isNew?"":`<button class="btn ghost" id="cDel" style="color:var(--danger)">מחיקה</button>`}</div>`, body=>{
+      $("#cS",body).onclick=()=>{ const t=$("#cT",body).value.trim(); if(!t){ $("#cT",body).focus(); return; }
+        c.title=t; c.who=$("#cW",body).value; c.time=$("#cH",body).value; c.note=$("#cN",body).value.trim();
+        const nd=$("#cD",body).value; c.date = (nd && (!d || nd!==iso(d) || c.date)) ? nd : c.date; if(!nd){ c.date=""; }
+        if(isNew) state.checks.push(c); save(); renderChecks(); closeDlg(); toast("נשמר"); };
+      const del=$("#cDel",body); if(del) del.onclick=async()=>{ if(await askConfirm("למחוק?","מחיקה")){ state.checks=state.checks.filter(y=>y.id!==c.id); save(); renderChecks(); closeDlg(); } };
+    });
+}
+$("#addCheck").onclick = () => editCheck(null);
+
+/* ---------- LOG ---------- */
+const LOGT = {
+  right:{ic:"🤱",t:"הנקה ימין",feed:1}, left:{ic:"🤱",t:"הנקה שמאל",feed:1}, bottle:{ic:"🍼",t:"בקבוק",feed:1},
+  wet:{ic:"💧",t:"חיתול רטוב",diaper:1}, dirty:{ic:"💩",t:"חיתול מלוכלך",diaper:1}, sleep:{ic:"😴",t:"נרדם"}
+};
+$("#quick").innerHTML = Object.entries(LOGT).map(([k,v])=>`<button data-lg="${k}"><span class="ic">${v.ic}</span>${v.t}</button>`).join("");
+document.querySelectorAll("[data-lg]").forEach(b=>b.onclick=()=>{
+  const type=b.dataset.lg;
+  const add = note => { state.log.push({id:uid(), t:Date.now(), type, note}); save(); renderLog(); toast(LOGT[type].t+" נרשם"); };
+  if(type!=="bottle"){ add(""); return; }
+  openDlg("בקבוק", `
+    <label class="f"><span>כמה מ״ל? (אפשר להשאיר ריק)</span><input type="number" inputmode="numeric" id="ml" min="0" placeholder="למשל 90"></label>
+    <button class="btn full" id="mlS">שמירה</button>`, body => {
+      const ml=$("#ml",body); setTimeout(()=>ml.focus(),50);
+      const go=()=>{ const v=ml.value.replace(/\D/g,""); add(v? v+" מ״ל":""); closeDlg(); };
+      $("#mlS",body).onclick=go; ml.addEventListener("keydown",e=>{ if(e.key==="Enter") go(); });
+    });
+});
+function ago(ms){ const m=Math.floor((Date.now()-ms)/60000); if(m<1) return "עכשיו"; if(m<60) return "לפני "+m+" דק׳"; const h=Math.floor(m/60), r=m%60; return "לפני "+h+" ש׳"+(r?" ו־"+r+" דק׳":""); }
+function renderLog(){
+  const L = state.log.slice().sort((a,b)=>b.t-a.t);
+  const lastFeed = L.find(x=>LOGT[x.type] && LOGT[x.type].feed);
+  const start = +today0();
+  const todays = L.filter(x=>x.t>=start);
+  const feeds = todays.filter(x=>LOGT[x.type]?.feed).length, diapers = todays.filter(x=>LOGT[x.type]?.diaper).length;
+  $("#since").innerHTML = `<div><span class="small muted">האכלה אחרונה</span><b>${lastFeed? ago(lastFeed.t):"—"}</b>${lastFeed?`<span class="small muted">${LOGT[lastFeed.type].t}</span>`:""}</div>
+    <div><span class="small muted">היום</span><b>${feeds} 🍼 ${diapers} 🧷</b><span class="small muted">האכלות וחיתולים</span></div>`;
+  const recent = L.filter(x=>x.t >= start - 86400000);
+  if(!recent.length){ $("#todayTitle").textContent="היום"; $("#logBody").innerHTML=`<div class="panel"><div class="empty">לחיצה על כפתור למעלה רושמת עם השעה הנוכחית.</div></div>`; return; }
+  $("#todayTitle").textContent = "היום ואתמול";
+  $("#logBody").innerHTML = `<ul class="list loglist">${recent.map(x=>{ const dt=new Date(x.t), y = x.t<start;
+    return `<li><span class="time">${dt.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}</span>
+    <div class="body"><div class="title">${LOGT[x.type]?.ic||""} ${LOGT[x.type]?.t||""}${x.note?", "+esc(x.note):""}</div>${y?`<div class="meta">אתמול</div>`:""}</div>
+    <button class="more" data-dl="${x.id}" aria-label="מחיקה">🗑</button></li>`; }).join("")}</ul>`;
+  document.querySelectorAll("[data-dl]").forEach(b=>b.onclick=async()=>{
+    const x=state.log.find(y=>y.id===b.dataset.dl); if(!x) return;
+    const when=new Date(x.t).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"});
+    if(await askConfirm("למחוק את הרישום \""+(LOGT[x.type]?.t||"")+"\" משעה "+when+"?","מחיקה")){ state.log=state.log.filter(y=>y.id!==x.id); save(); renderLog(); toast("נמחק"); }
+  });
+}
+setInterval(()=>{ if(!$("#tab-log").hidden) renderLog(); }, 60000);
+
+/* ---------- boot ---------- */
+function renderAll(){ renderBaby(); renderBrit(); renderChecks(); renderLog(); }
+renderAll();
+try{ const tab=localStorage.getItem("baby-app-tab"); if(tab){ const b=document.querySelector(`nav.tabs button[data-tab="${tab}"]`); b && b.click(); } }catch(e){}
+boot();
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+})();
+</script>
+</body>
+</html>
