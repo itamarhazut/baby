@@ -159,6 +159,15 @@ dialog .db{padding:14px 18px 18px}
 .sq{flex:none;width:40px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px}
 .sq:disabled{opacity:.35}
 .addrow select{width:auto;max-width:42%}
+.fab{position:fixed;left:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:12;border:0;border-radius:999px;padding:13px 22px;font-weight:700;font-size:16px;background:var(--ink);color:var(--bg);box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.fab.on{background:var(--gold);color:#1C2742}
+#tab-brit{padding-bottom:70px}
+.addbtn{display:block;width:100%;margin-top:8px;background:transparent;border:1.5px dashed var(--line);border-radius:14px;padding:11px;font-weight:600;font-size:16px;color:var(--muted)}
+.addbtn:active{background:var(--sky)}
+.handle{flex:none;width:44px;height:44px;margin:-8px -6px -8px 0;display:grid;place-items:center;border:0;background:none;font-size:26px;line-height:1;color:var(--muted);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.list li.ghosted{opacity:.3;background:var(--sky)}
+.dragging-ghost{position:fixed;z-index:50;margin:0;pointer-events:none;box-shadow:0 12px 30px rgba(0,0,0,.3)}
+body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .hr{display:flex;align-items:center;gap:6px}
 .gear{background:none;border:0;font-size:20px;padding:4px 6px;line-height:1}
 #gate{position:fixed;inset:0;z-index:60;background:var(--bg);overflow:auto;padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px))}
@@ -197,12 +206,8 @@ dialog .db{padding:14px 18px 18px}
   <section id="tab-brit" role="tabpanel" hidden>
     <div id="britHead"></div>
     <div id="britLists"></div>
-    <div class="addrow">
-      <input type="text" id="newTask" placeholder="משימה חדשה" aria-label="משימה חדשה">
-      <select id="newGroup" aria-label="קבוצה"></select>
-      <button class="btn" id="addTask">הוספה</button>
-    </div>
-    <p class="note">הקשה על "מי?" מחליפה בין אני, אשתי, או אף אחד. הקשה על ⋯ לעריכה או הערה.</p>
+    <p class="note" id="britNote"></p>
+    <button class="fab" id="editFab" aria-pressed="false">✎ עריכה</button>
   </section>
 
   <!-- Checks -->
@@ -673,37 +678,39 @@ function getGroups(){
   state.brit.forEach(x=>{ if(!x.group) x.group="עוד"; if(!state.groups.includes(x.group)) state.groups.push(x.group); });
   return state.groups;
 }
-let lastGroup = "";
-let reorderMode = false;
+let editMode = false, dragging = false;
 const WHO = ["","me","her"], WHO_TXT = {"":"מי?","me":"אני","her":"אשתי"};
 function renderBrit(){
+  if (dragging) return;
   const t = state.brit, done = t.filter(x=>x.done).length, bdt = britDate();
   let when = "";
   if (bdt){ const d=diffDays(bdt,today0()); when = d>1? `בעוד ${d} ימים, ${fmtShort(bdt)}` : d===1? `מחר, ${fmtShort(bdt)}` : d===0? "היום! מזל טוב 🎉" : `התקיימה ב־${fmtShort(bdt)}`; }
   $("#britHead").innerHTML = `<h2 style="margin-top:6px">משימות לברית</h2>
     ${when?`<div class="muted" style="margin-bottom:8px">הברית ${when}</div>`:`<div class="muted small" style="margin-bottom:8px">הוסיפו תאריך לידה בכרטיס התינוק כדי לחשב את יום הברית.</div>`}
     <div class="progress"><div class="bar"><i style="width:${t.length?Math.round(done/t.length*100):0}%"></i></div><span class="small muted">${done} מתוך ${t.length}</span></div>
-    <div class="row" style="margin-top:8px"><button class="btn ghost" id="editGroups">עריכת קבוצות</button>
-      <button class="btn ${reorderMode?"gold":"ghost"}" id="reorderBtn">${reorderMode?"סיום סידור":"סידור משימות"}</button></div>`;
-  $("#editGroups").onclick = manageGroups;
-  $("#reorderBtn").onclick = () => { reorderMode = !reorderMode; renderBrit(); };
+    ${editMode?`<div class="row" style="margin-top:10px"><button class="btn ghost" id="editGroups">עריכת קבוצות</button></div>`:""}`;
+  const eg = $("#editGroups"); if (eg) eg.onclick = manageGroups;
+  const fab = $("#editFab");
+  fab.textContent = editMode ? "✓ סיום" : "✎ עריכה";
+  fab.classList.toggle("on", editMode);
+  fab.setAttribute("aria-pressed", String(editMode));
+  $("#britNote").textContent = editMode
+    ? "גררו את ≡ כדי לסדר משימות, גם בין קבוצות. ⋯ לעריכה או מחיקה של משימה."
+    : "הקשה על \"מי?\" מחליפה בין אני, אשתי, או אף אחד. הקשה על ⋯ לעריכה או הערה.";
   const groups = getGroups();
-  const sel = $("#newGroup");
-  if (sel){ if(!groups.includes(lastGroup)) lastGroup = groups[0]||""; sel.innerHTML = groups.map(g=>`<option ${g===lastGroup?"selected":""}>${esc(g)}</option>`).join(""); }
   $("#britLists").innerHTML = groups.map(g => {
     const items = t.filter(x=>(x.group||"עוד")===g);
-    return `<div class="ghead"><h3>${esc(g)}</h3><div class="gbtns"><button class="gbtn" data-ga="${esc(g)}" aria-label="הוספת משימה לקבוצה">＋ משימה</button><button class="gbtn" data-ge="${esc(g)}" aria-label="עריכת קבוצה">✎ קבוצה</button></div></div><ul class="list">${items.map((x,i)=>`
-    <li class="${x.done?"done":""}"><input type="checkbox" class="chk" data-tc="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
+    return `<div class="ghead"><h3>${esc(g)}</h3>${editMode?`<div class="gbtns"><button class="gbtn" data-ge="${esc(g)}" aria-label="עריכת קבוצה">✎ עריכת קבוצה</button></div>`:""}</div><ul class="list" data-g="${esc(g)}">${items.map(x=>`
+    <li class="${x.done?"done":""}" data-id="${x.id}"><input type="checkbox" class="chk" data-tc="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
       <div class="body"><div class="title">${esc(x.title)}</div>${x.note?`<div class="meta">${esc(x.note)}</div>`:""}</div>
-      ${reorderMode
-        ? `<button class="sq" data-mu="${x.id}" ${i===0?"disabled":""} aria-label="הזזה למעלה">↑</button><button class="sq" data-md="${x.id}" ${i===items.length-1?"disabled":""} aria-label="הזזה למטה">↓</button>`
+      ${editMode
+        ? `<button class="more" data-te="${x.id}" aria-label="עריכת משימה">⋯</button><button class="handle" data-hd="${x.id}" aria-label="גרירה לשינוי סדר">≡</button>`
         : `<button class="chip ${x.who}" data-tw="${x.id}">${WHO_TXT[x.who||""]}</button>
-      <button class="more" data-te="${x.id}" aria-label="עריכה">⋯</button>`}</li>`).join("")}</ul>`;
+      <button class="more" data-te="${x.id}" aria-label="עריכה">⋯</button>`}</li>`).join("")}</ul><button class="addbtn" data-ga="${esc(g)}">＋ הוספת משימה</button>`;
   }).join("");
   document.querySelectorAll("[data-ga]").forEach(c=>c.onclick=()=>addTaskTo(c.dataset.ga));
   document.querySelectorAll("[data-ge]").forEach(c=>c.onclick=()=>editGroup(c.dataset.ge));
-  document.querySelectorAll("[data-mu]").forEach(c=>c.onclick=()=>moveTask(c.dataset.mu,-1));
-  document.querySelectorAll("[data-md]").forEach(c=>c.onclick=()=>moveTask(c.dataset.md,1));
+  document.querySelectorAll("[data-hd]").forEach(c=>c.addEventListener("pointerdown", startDrag));
   document.querySelectorAll("[data-tc]").forEach(c=>c.onchange=()=>{ const x=t.find(y=>y.id===c.dataset.tc); x.done=c.checked; save(); renderBrit(); renderBaby(); });
   document.querySelectorAll("[data-tw]").forEach(c=>c.onclick=()=>{ const x=t.find(y=>y.id===c.dataset.tw); x.who=WHO[(WHO.indexOf(x.who||"")+1)%3]; save(); renderBrit(); });
   document.querySelectorAll("[data-te]").forEach(c=>c.onclick=()=>editTask(c.dataset.te));
@@ -748,16 +755,81 @@ function editGroup(g){
       };
     });
 }
-function moveTask(id, dir){
-  const x = state.brit.find(y=>y.id===id); if(!x) return;
-  const g = x.group||"עוד", idxs = [];
-  state.brit.forEach((y,i)=>{ if((y.group||"עוד")===g) idxs.push(i); });
-  const pos = idxs.findIndex(i=>state.brit[i].id===id), to = pos + dir;
-  if (to < 0 || to >= idxs.length) return;
-  const a = idxs[pos], b = idxs[to];
-  [state.brit[a], state.brit[b]] = [state.brit[b], state.brit[a]];
-  save(); renderBrit();
+function startDrag(e){
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  const li = e.currentTarget.closest("li"); if (!li) return;
+  e.preventDefault();
+  dragging = true; document.body.classList.add("drag-active");
+  const rect = li.getBoundingClientRect(), offY = e.clientY - rect.top, pid = e.pointerId;
+  const ghost = document.createElement("ul"); ghost.className = "list dragging-ghost";
+  ghost.appendChild(li.cloneNode(true));
+  Object.assign(ghost.style, {left: rect.left + "px", top: rect.top + "px", width: rect.width + "px"});
+  document.body.appendChild(ghost);
+  li.classList.add("ghosted");
+  let lastY = e.clientY, raf = 0;
+  const place = () => {
+    ghost.style.top = (lastY - offY) + "px";
+    const el = document.elementFromPoint(rect.left + rect.width / 2, lastY);
+    if (!el || !el.closest) return;
+    const tli = el.closest("#britLists li");
+    if (tli) {
+      if (tli !== li){
+        const r = tli.getBoundingClientRect();
+        tli.parentNode.insertBefore(li, lastY < r.top + r.height / 2 ? tli : tli.nextSibling);
+      }
+      return;
+    }
+    const add = el.closest("#britLists .addbtn");
+    if (add){ const ul = add.previousElementSibling; if (ul && ul.tagName === "UL" && ul.lastElementChild !== li) ul.appendChild(li); return; }
+    const head = el.closest("#britLists .ghead");
+    if (head){ const ul = head.nextElementSibling; if (ul && ul.tagName === "UL" && ul.firstElementChild !== li) ul.insertBefore(li, ul.firstChild); return; }
+    const ul = el.closest("#britLists ul");
+    if (ul && ul !== li.parentNode) ul.appendChild(li);
+  };
+  const tick = () => {
+    if (!dragging) return;
+    const H = window.innerHeight; let dy = 0;
+    if (lastY < 110) dy = -Math.ceil((110 - lastY) / 6);
+    else if (lastY > H - 150) dy = Math.ceil((lastY - (H - 150)) / 6);
+    if (dy){ window.scrollBy(0, dy); place(); }
+    raf = requestAnimationFrame(tick);
+  };
+  const move = ev => { if (ev.pointerId !== pid) return; lastY = ev.clientY; place(); };
+  const finish = (ev, ok) => {
+    if (ev.pointerId !== pid) return;
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onCancel);
+    cancelAnimationFrame(raf);
+    ghost.remove(); li.classList.remove("ghosted");
+    document.body.classList.remove("drag-active");
+    dragging = false;
+    if (ok) commitOrder(); else renderBrit();
+  };
+  const onUp = ev => finish(ev, true), onCancel = ev => finish(ev, false);
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", onCancel);
+  raf = requestAnimationFrame(tick);
 }
+function commitOrder(){
+  const byId = new Map(state.brit.map(x => [x.id, x]));
+  const next = [];
+  document.querySelectorAll("#britLists ul[data-g]").forEach(ul => {
+    ul.querySelectorAll("li[data-id]").forEach(l => {
+      const x = byId.get(l.dataset.id);
+      if (x){ x.group = ul.dataset.g; next.push(x); byId.delete(l.dataset.id); }
+    });
+  });
+  byId.forEach(x => next.push(x));
+  const sig = a => a.map(x => x.id + "|" + (x.group || "עוד")).join(",");
+  const changed = sig(next) !== sig(state.brit);
+  state.brit = next;
+  if (changed) save();
+  renderBrit(); renderBaby();
+}
+$("#britLists").addEventListener("contextmenu", ev => { if (ev.target.closest && ev.target.closest(".handle")) ev.preventDefault(); });
+$("#editFab").onclick = () => { editMode = !editMode; renderBrit(); };
 function editTask(id){
   const x = state.brit.find(y=>y.id===id); const groups=getGroups();
   openDlg("עריכת משימה", `
@@ -801,9 +873,6 @@ function manageGroups(){
     draw();
   });
 }
-function addTask(){ const i=$("#newTask"), v=i.value.trim(); if(!v) return; const gs=getGroups(); let g=$("#newGroup").value||gs[0]; if(!g){ g="עוד"; gs.push(g); } lastGroup=g; state.brit.push({id:uid(),group:g,title:v,who:"",done:false,note:""}); i.value=""; save(); renderBrit(); toast("המשימה נוספה"); }
-$("#addTask").onclick = addTask;
-$("#newTask").addEventListener("keydown", e=>{ if(e.key==="Enter") addTask(); });
 
 /* ---------- CHECKS ---------- */
 function checkDate(c){ if(c.date) return parseD(c.date); const bd=parseD(state.baby.birthDate); return bd && c.offset!=null && c.offset!=="" ? addDays(bd, +c.offset) : null; }
