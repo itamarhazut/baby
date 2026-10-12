@@ -162,6 +162,37 @@ dialog .db{padding:14px 18px 18px}
 .fab{position:fixed;left:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:12;border:0;border-radius:999px;padding:13px 22px;font-weight:700;font-size:16px;background:var(--ink);color:var(--bg);box-shadow:0 6px 18px rgba(0,0,0,.3)}
 .fab.on{background:var(--gold);color:#1C2742}
 #tab-brit{padding-bottom:70px}
+.qk{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+.qk summary{font-weight:700;cursor:pointer}
+.qk h4{margin:12px 0 6px;font-size:13.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:15px}
+.chips button:active{background:var(--sky)}
+.shophead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.shophead .btn{padding:9px 14px;font-size:15px}
+.chips.ac{margin-top:8px}
+.chips.ac:empty{display:none}
+.chips button.sug{background:var(--gold-soft);border-color:transparent}
+.dsign{display:flex;align-items:center;gap:10px;background:var(--dc);color:#fff;border-radius:14px 14px 0 0;padding:8px 14px;margin-top:18px}
+.dsign .ic{font-size:26px;line-height:1}
+.dsign h3{margin:0;color:#fff;font-size:17px;flex:1}
+.dsign .cnt{background:rgba(255,255,255,.26);border-radius:999px;padding:2px 11px;font-size:13px;font-weight:700;white-space:nowrap}
+.dsign.fin{opacity:.6}
+.dsign + .list{border:2px solid var(--dc);border-top:0;border-radius:0 0 14px 14px}
+.qty{display:flex;align-items:center;gap:3px;flex:none}
+.qb{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:18px;line-height:1;padding:0}
+.qb:disabled{opacity:.3}
+.qv{min-width:30px;text-align:center;font-weight:800;line-height:1.05}
+.qv small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.list li.done .qty{display:none}
+.mvbar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.mvnav{display:flex;gap:10px;margin-top:14px}
+.mvnav .btn{flex:1;padding:14px 10px;font-size:16px}
+.mvlist li{padding:16px 14px}
+.mvlist .title{font-size:19px}
+.mvlist .chk{width:32px;height:32px;border-radius:10px}
+.mvdone{text-align:center;padding:26px 10px}
+.mvdone .big{font-size:54px}
 .addbtn{display:block;width:100%;margin-top:8px;background:transparent;border:1.5px dashed var(--line);border-radius:14px;padding:11px;font-weight:600;font-size:16px;color:var(--muted)}
 .addbtn:active{background:var(--sky)}
 .handle{flex:none;width:44px;height:44px;margin:-8px -6px -8px 0;display:grid;place-items:center;border:0;background:none;font-size:26px;line-height:1;color:var(--muted);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -213,9 +244,16 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
 
   <!-- Shop -->
   <section id="tab-shop" role="tabpanel" hidden>
-    <h2 style="margin-top:6px">קניות ומטלות</h2>
-    <div class="addrow" style="margin-top:0"><input type="text" id="shopIn" placeholder="מה צריך לקנות או לעשות?" enterkeyhint="done"><button class="btn" id="shopAdd">הוספה</button></div>
-    <div id="shopBody"></div>
+    <div class="shophead"><h2 style="margin:6px 0 0">קניות</h2><button class="btn gold" id="shopMode">🛒 התחלת קנייה</button></div>
+    <div id="shopNormal">
+      <div class="addrow"><input type="text" id="shopIn" placeholder="מה צריך לקנות? אפשר גם: 2 חלב" enterkeyhint="done" autocomplete="off"><button class="btn" id="shopAdd">הוספה</button></div>
+      <div id="shopAc" class="chips ac"></div>
+      <div id="shopSug"></div>
+      <details id="shopQuick" class="qk"><summary>⚡ הוספה מהירה</summary><div id="shopChips"></div></details>
+      <div id="shopBody"></div>
+      <button class="btn ghost full" id="shopRoute" style="margin-top:16px">🧭 עריכת סדר המחלקות (המסלול בחנות)</button>
+    </div>
+    <div id="shopMv" hidden></div>
   </section>
 
   <!-- Checks -->
@@ -293,7 +331,7 @@ function defaults(){
   return {
     baby:{name:"",hebName:"",idNum:"",birthDate:"",birthTime:"",afterSunset:false,britOverride:"",weight:"",length:"",head:"",blood:"",
       hospital:"",hmo:"",pediatrician:"",pediatricianPhone:"",tipat:"",tipatPhone:"",father:"",mother:"",notes:""},
-    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], shop:[], log:[], updatedAt:0
+    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], shop:[], shopDepts:null, shopMap:{}, shopHist:{}, log:[], updatedAt:0
   };
 }
 
@@ -324,8 +362,8 @@ const SECTIONS = {
            set:d=>{ if(Array.isArray(d.brit)) state.brit=d.brit; state.groups=Array.isArray(d.groups)?d.groups:null; state.afterGroup=(typeof d.afterGroup==="string")?d.afterGroup:"אחרי הברית"; }},
   checks: {get:()=>({checks:state.checks}),
            set:d=>{ if(Array.isArray(d.checks)) state.checks=d.checks; }},
-  shop:   {get:()=>({shop:state.shop}),
-           set:d=>{ state.shop = Array.isArray(d.shop)?d.shop:[]; }},
+  shop:   {get:()=>({shop:state.shop, depts:state.shopDepts||null, map:state.shopMap||{}, hist:state.shopHist||{}}),
+           set:d=>{ state.shop = Array.isArray(d.shop)?d.shop:[]; state.shopDepts = Array.isArray(d.depts)?d.depts:null; state.shopMap = (d.map && typeof d.map==="object")?d.map:{}; state.shopHist = (d.hist && typeof d.hist==="object")?d.hist:{}; }},
   growth: {get:()=>({growth:state.growth}),
            set:d=>{ state.growth = Array.isArray(d.growth)?d.growth:[]; }}
 };
@@ -940,28 +978,244 @@ function editCheck(id){
 $("#addCheck").onclick = () => editCheck(null);
 
 /* ---------- SHOP ---------- */
+// סדר ברירת המחדל של המחלקות (אפשר לשנות באפליקציה לפי המסלול בחנות)
+const DEPT_DEFAULT = ["🥬 פירות וירקות","🥖 לחם ומאפים","🥩 בשר, עוף ודגים","🥛 חלב וביצים","🧀 גבינות וסלטים","🥫 שימורים ובישול","🍪 חטיפים, דגנים וממתקים","🥤 משקאות","🧊 קפואים","👶 תינוקות","🧴 טיפוח ובית מרקחת","🧽 ניקיון וחד פעמי","📦 אחר"];
+const DEPT_OTHER = "📦 אחר";
+const DEPT_KW = [
+  ["👶 תינוקות", ["חיתול","מגבון","פורמולה","תמ\"ל","תמל","מטרנה","סימילאק","נוטרילון","בקבוק","מוצץ","דייסת","מחית","פורה","קרם החתלה","בפנטן","מגבוני"]],
+  ["🥬 פירות וירקות", ["עגבני","מלפפון","בצל","בצלים","שום","גזר","תפוח","בננ","תפוז","לימון","אבוקדו","חסה","פלפל","קישוא","חציל","בטטה","תפוחי אדמה","תפו\"א","תפוא","ירקות","פירות","פטרוזיליה","כוסברה","נענע","שמיר","ענבים","אבטיח","מלון","אגס","קלמנטינ","אפרסק","תות","פטריות","כרוב","ברוקולי","כרובית","דלעת","סלרי","תירס טרי"]],
+  ["🥖 לחם ומאפים", ["לחם","פיתה","פיתות","חלה","לחמניה","לחמניות","באגט","בורקס","עוגה","עוגיות","קרואסון","טורטייה","מאפה","בייגל"]],
+  ["🥩 בשר, עוף ודגים", ["עוף","חזה","שניצל","בשר","טחון","סטייק","כבד","נקניק","נקניקיות","המבורגר","קבב","דג","דגים","סלמון","טונה טרייה","פילה","כנפיים","שוקיים","אנטרקוט"]],
+  ["🥛 חלב וביצים", ["חלב","ביצים","ביצה","שמנת","חמאה","יוגורט","לבן","שוקו","מילקי","קוטג","אשל","דנונה"]],
+  ["🧀 גבינות וסלטים", ["גבינ","צהובה","מוצרלה","פטה","בולגרית","חומוס","טחינה","סלט","חצילים","מטבוחה","זיתים","לבנה","שמנת חמוצה","טופו"]],
+  ["🧊 קפואים", ["קפוא","גלידה","שלגון","פיצה","ג'חנון","מלוואח","בוקר","אפונה קפואה","שניצלונים","נאגטס","בצק עלים"]],
+  ["🥤 משקאות", ["מים","קולה","ספרייט","פנטה","מיץ","סודה","בירה","יין","תה","קפה","נס","שתיה","שתייה","חלב שקדים","משקה","אנרגיה","קפסולות"]],
+  ["🍪 חטיפים, דגנים וממתקים", ["במבה","ביסלי","חטיף","שוקולד","ממתק","סוכריות","קורנפלקס","דגנים","פתיתי","גרנולה","דבש","ריבה","נוטלה","וופל","פופקורן","צ'יפס","אגוזים","שקדים","בוטנים","פיצוחים","מרשמלו","עוגיה"]],
+  ["🥫 שימורים ובישול", ["אורז","פסטה","ספגטי","קמח","סוכר","מלח","שמן","רוטב","רסק","שימורים","תירס","אפונה","קטניות","עדשים","שעועית","גרגירי חומוס","קוסקוס","בורגול","קינואה","תבלין","פפריקה","כמון","אבקת אפייה","קטשופ","מיונז","חרדל","מרק","פתיתים","אטריות","טונה","סרדין","עלי גפן","קורנפלור","שמרים"]],
+  ["🧴 טיפוח ובית מרקחת", ["שמפו","סבון","משחת שיניים","מברשת שיניים","דאודורנט","קרם","תרופה","נובימול","אקמול","ויטמין","פלסטר","צמר גפן","מטלית","תחבושת","טמפון","סכיני גילוח","גילוח","אופטלגין","אדוויל","מגבות נייר לחות","אלכוג'ל","מסכה"]],
+  ["🧽 ניקיון וחד פעמי", ["אקונומיקה","נוזל כלים","אבקת כביסה","מרכך","נייר טואלט","מגבות נייר","שקיות","זבל","ספוג","סבון כלים","מנקה","טישו","מפיות","צלחות","כוסות","סכו\"ם חד","נייר אלומיניום","נייר אפייה","ניילון","כביסה","ריחות","מטהר"]]
+];
+function guessDept(title){
+  const t = (title||"").trim(); if(!t) return DEPT_OTHER;
+  const m = state.shopMap || {}; if (m[t]) return m[t];
+  const toks = t.split(/\s+/);
+  const hit = k => k.length<=3 ? toks.some(w=>w===k || w==="ה"+k) : t.includes(k);
+  for (const [d,ks] of DEPT_KW) if (ks.some(hit)) return d;
+  return DEPT_OTHER;
+}
+function shopDepts(){
+  const base = Array.isArray(state.shopDepts) && state.shopDepts.length ? state.shopDepts.slice() : DEPT_DEFAULT.slice();
+  if (!base.includes(DEPT_OTHER)) base.push(DEPT_OTHER);
+  return base;
+}
+const SHOP_QUICK = {
+  "👶 תינוקות":["חיתולים","מגבונים","פורמולה","קרם החתלה","בפנטן","בקבוקים","מוצצים"],
+  "🥬 פירות וירקות":["עגבניות","מלפפונים","בצל","תפוחי אדמה","בננות","תפוחים","לימון","אבוקדו"],
+  "🥛 חלב וביצים":["חלב","ביצים","יוגורט","שמנת","חמאה"],
+  "🥖 לחם ומאפים":["לחם","פיתות","חלה"],
+  "🥩 בשר, עוף ודגים":["חזה עוף","שניצל","בשר טחון"],
+  "🧀 גבינות וסלטים":["קוטג'","גבינה צהובה","חומוס","טחינה"],
+  "🥫 שימורים ובישול":["אורז","פסטה","שמן","קמח","סוכר","רסק עגבניות"],
+  "🥤 משקאות":["מים","מיץ","קפה","תה"],
+  "🧴 טיפוח ובית מרקחת":["נובימול","פלסטרים","צמר גפן","משחת שיניים","סבון","שמפו"],
+  "🧽 ניקיון וחד פעמי":["נייר טואלט","מגבות נייר","נוזל כלים","אבקת כביסה","שקיות זבל"]
+};
+
+const DEPT_COLOR = {"🥬":"#2F8F4E","🥖":"#B8802F","🥩":"#C0392B","🥛":"#2E78C7","🧀":"#C99A1B","🥫":"#D9731F","🍪":"#8E55B8","🥤":"#16908F","🧊":"#4A90B8","👶":"#D9628E","🧴":"#B2418F","🧽":"#2487A8","📦":"#6B7692"};
+const deptColor = d => DEPT_COLOR[[...d][0]] || "#6B7692";
+const deptIc = d => [...d][0], deptName = d => d.replace(/^\S+\s/,"");
+const UNITS = ["","ק״ג","גרם","ליטר","חבילות","מארז"];
+const PRODUCTS = ("חיתולים,מגבונים,פורמולה,בפנטן,בקבוקים,מוצצים,עגבניות,עגבניות שרי,מלפפונים,בצל,שום,גזר,תפוחי אדמה,בטטה,בננות,תפוחים,תפוזים,לימון,אבוקדו,חסה,פלפלים,קישואים,חצילים,פטרוזיליה,כוסברה,נענע,ענבים,אבטיח,פטריות,ברוקולי,כרובית,לחם,לחם פרוס,פיתות,חלה,לחמניות,בורקס,עוגה,טורטייה,חזה עוף,שוקיים,כנפיים,שניצל,בשר טחון,סטייק,נקניקיות,כבד,סלמון,דג,חלב,חלב 3%,ביצים,שמנת,שמנת חמוצה,חמאה,יוגורט,שוקו,קוטג',לבן,גבינה צהובה,גבינה לבנה,מוצרלה,פטה,גבינת שמנת,חומוס,טחינה,סלט חצילים,זיתים,טופו,גלידה,אפונה קפואה,שניצלונים,פיצה קפואה,בצק עלים,אורז,פסטה,ספגטי,קמח,סוכר,מלח,שמן,שמן זית,רסק עגבניות,רוטב עגבניות,תירס,טונה,עדשים,חומוס יבש,קוסקוס,בורגול,קטשופ,מיונז,חרדל,מרק,אבקת אפייה,במבה,ביסלי,שוקולד,קורנפלקס,דגנים,דבש,ריבה,נוטלה,וופלים,פופקורן,אגוזים,שקדים,בוטנים,מים,מיץ,קולה,סודה,קפה,נס קפה,תה,בירה,יין,נובימול,פלסטרים,צמר גפן,משחת שיניים,מברשת שיניים,סבון,שמפו,דאודורנט,נייר טואלט,מגבות נייר,נוזל כלים,אבקת כביסה,מרכך כביסה,אקונומיקה,שקיות זבל,ספוגים,טישו,נייר אפייה,נייר אלומיניום").split(",");
+function knownProducts(){
+  const set = new Map();
+  Object.values(SHOP_QUICK).forEach(a=>a.forEach(t=>set.set(t,1)));
+  PRODUCTS.forEach(t=>set.set(t,1));
+  Object.keys(state.shopHist||{}).forEach(t=>set.set(t,1));
+  (state.shop||[]).forEach(x=>set.set(x.title,1));
+  return [...set.keys()];
+}
+function parseQty(txt){
+  let t = txt.trim(), qty = 1, unit = "";
+  let m = t.match(/^(\d+(?:\.\d+)?)\s*(ק"ג|ק״ג|קג|גרם|ליטר|חבילות|חבילה|מארז)?\s+(.+)$/);
+  if (m){ qty = +m[1]; t = m[3].trim(); const u=m[2]; if(u) unit = /ק/.test(u)&&!/גרם/.test(u) ? "ק״ג" : u==="חבילה"?"חבילות":u; }
+  else { m = t.match(/^(.+?)\s*[xX×]\s*(\d+)$/); if (m){ t = m[1].trim(); qty = +m[2]; } }
+  if (!(qty>0) || qty>999) { qty = 1; }
+  return {title:t, qty, unit};
+}
+/* היסטוריית קניות: ממנה לומדים מה חוזר ומתי כדאי להציע */
+function markBought(x){
+  if (!state.shopHist || typeof state.shopHist!=="object") state.shopHist={};
+  const h = state.shopHist[x.title] || (state.shopHist[x.title]={n:0,ts:[],dept:x.dept});
+  h.n++; h.dept=x.dept; h.ts=(h.ts||[]).concat(Date.now()).slice(-6); x.boughtAt=Date.now();
+  const keys = Object.keys(state.shopHist);
+  if (keys.length>400){ keys.sort((a,b)=>(state.shopHist[a].ts.slice(-1)[0]||0)-(state.shopHist[b].ts.slice(-1)[0]||0)).slice(0,keys.length-400).forEach(k=>delete state.shopHist[k]); }
+}
+function unmarkBought(x){
+  const h = state.shopHist && state.shopHist[x.title];
+  if (h && x.boughtAt && Date.now()-x.boughtAt < 120000){ h.n=Math.max(0,h.n-1); h.ts=(h.ts||[]).slice(0,-1); if(!h.n) delete state.shopHist[x.title]; }
+  delete x.boughtAt;
+}
+function suggestions(){
+  const H = state.shopHist||{}, open = new Set((state.shop||[]).filter(x=>!x.done).map(x=>x.title)), now = Date.now(), out=[];
+  Object.entries(H).forEach(([t,h])=>{
+    if (open.has(t) || !h.n) return;
+    const ts = h.ts||[], last = ts[ts.length-1]||0;
+    let due = false;
+    if (ts.length>=2){ const avg=(ts[ts.length-1]-ts[0])/(ts.length-1); due = avg>=3600000*20 && now-last >= avg*0.9; }
+    if (due) out.push({t, due:1, score:1000+h.n});
+    else if (h.n>=2 && now-last > 86400000*2) out.push({t, due:0, score:h.n});
+  });
+  return out.sort((a,b)=>b.score-a.score).slice(0,8);
+}
+function shopRow(x, big){
+  const q = +x.qty||1, un = x.unit||"";
+  return `<li class="${x.done?"done":""}"><input type="checkbox" class="chk" data-sc="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
+    <div class="body"><div class="title">${esc(x.title)}</div>${x.note?`<div class="meta">${esc(x.note)}</div>`:""}</div>
+    <div class="qty"><button class="qb" data-qm="${x.id}" ${q<=1?"disabled":""} aria-label="פחות">−</button><div class="qv">${q}${un?`<small>${esc(un)}</small>`:""}</div><button class="qb" data-qp="${x.id}" aria-label="עוד">+</button></div>
+    ${big?"":`<button class="more" data-se="${x.id}" aria-label="עריכה">⋯</button>`}</li>`;
+}
+function deptSign(d, items){
+  const open = items.filter(x=>!x.done).length;
+  return `<div class="dsign ${open?"":"fin"}" style="--dc:${deptColor(d)}"><span class="ic">${deptIc(d)}</span><h3>${esc(deptName(d))}</h3><span class="cnt">${open? open+" לקנות":"הכול נקנה ✓"}</span></div>`;
+}
+function bindShopRows(){
+  const find = id => state.shop.find(y=>y.id===id);
+  document.querySelectorAll("[data-sc]").forEach(c=>c.onchange=()=>{ const x=find(c.dataset.sc); if(!x) return; x.done=c.checked; c.checked ? markBought(x) : unmarkBought(x); save(); renderShop(); });
+  document.querySelectorAll("[data-qp]").forEach(c=>c.onclick=()=>{ const x=find(c.dataset.qp); if(x){ x.qty=(+x.qty||1)+1; save(); renderShop(); } });
+  document.querySelectorAll("[data-qm]").forEach(c=>c.onclick=()=>{ const x=find(c.dataset.qm); if(x && (+x.qty||1)>1){ x.qty=(+x.qty||1)-1; save(); renderShop(); } });
+  document.querySelectorAll("[data-se]").forEach(c=>c.onclick=()=>editShop(c.dataset.se));
+}
+let shopMode = false, shopCur = "";
 function renderShop(){
   if(!Array.isArray(state.shop)) state.shop=[];
-  const L = state.shop, open = L.filter(x=>!x.done), done = L.filter(x=>x.done);
-  const row = x => `<li class="${x.done?"done":""}"><input type="checkbox" class="chk" data-sc="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
-    <div class="body"><div class="title">${esc(x.title)}</div></div><button class="more" data-sd="${x.id}" aria-label="מחיקה">🗑</button></li>`;
-  $("#shopBody").innerHTML = (L.length ? "" : `<div class="panel" style="margin-top:12px"><div class="empty">הרשימה ריקה. מוסיפים פריט למעלה והוא יופיע גם אצל בן או בת הזוג.</div></div>`)
-    + (open.length ? `<h3>לקנות / לעשות (${open.length})</h3><ul class="list">${open.map(row).join("")}</ul>` : "")
-    + (done.length ? `<h3>סומן (${done.length})</h3><ul class="list">${done.map(row).join("")}</ul><button class="addbtn" id="shopClear">ניקוי כל הפריטים שסומנו</button>` : "");
-  document.querySelectorAll("[data-sc]").forEach(c=>c.onchange=()=>{ const x=state.shop.find(y=>y.id===c.dataset.sc); if(x){ x.done=c.checked; save(); renderShop(); } });
-  document.querySelectorAll("[data-sd]").forEach(c=>c.onclick=async()=>{
-    const x=state.shop.find(y=>y.id===c.dataset.sd); if(!x) return;
-    if(await askConfirm("למחוק את \""+x.title+"\"?","מחיקה")){ state.shop=state.shop.filter(y=>y.id!==x.id); save(); renderShop(); }
+  const L = state.shop, depts = shopDepts();
+  L.forEach(x=>{ if(!x.dept || !depts.includes(x.dept)) x.dept = DEPT_OTHER; });
+  $("#shopNormal").hidden = shopMode; $("#shopMv").hidden = !shopMode;
+  $("#shopMode").textContent = shopMode ? "✕ יציאה מקנייה" : "🛒 התחלת קנייה";
+  if (shopMode){ renderShopMode(L, depts); return; }
+  let html = L.length ? "" : `<div class="panel" style="margin-top:12px"><div class="empty">הרשימה ריקה. הוסיפו פריט למעלה, והוא יופיע גם אצל בן או בת הזוג.</div></div>`;
+  depts.forEach(d=>{
+    const items = L.filter(x=>x.dept===d).sort((a,b)=>(a.done-b.done)); if(!items.length) return;
+    html += deptSign(d,items) + `<ul class="list">${items.map(x=>shopRow(x)).join("")}</ul>`;
   });
-  const cl=$("#shopClear"); if(cl) cl.onclick=async()=>{ if(await askConfirm("למחוק את כל "+done.length+" הפריטים שסומנו?","מחיקה")){ state.shop=state.shop.filter(y=>!y.done); save(); renderShop(); } };
+  const doneN = L.filter(x=>x.done).length;
+  if (doneN) html += `<button class="addbtn" id="shopClear" style="margin-top:16px">ניקוי כל הפריטים שסומנו (${doneN})</button>`;
+  $("#shopBody").innerHTML = html;
+  // הצעות לפי היסטוריה
+  const sg = suggestions();
+  $("#shopSug").innerHTML = sg.length ? `<div class="qk" style="background:var(--gold-soft);border-color:transparent"><b>💡 הצעות לפי מה שקניתם</b><div class="chips" style="margin-top:8px">${sg.map(g=>`<button class="sug" data-sq="${esc(g.t)}">${g.due?"⏰ ":"＋ "}${esc(g.t)}</button>`).join("")}</div><div class="small muted" style="margin-top:6px">⏰ = הגיע הזמן לפי הקצב שלכם</div></div>` : "";
+  // הוספה מהירה
+  const openT = new Set(L.filter(x=>!x.done).map(x=>x.title));
+  $("#shopChips").innerHTML = depts.filter(d=>SHOP_QUICK[d]).map(d=>`<h4>${esc(d)}</h4><div class="chips">${SHOP_QUICK[d].filter(t=>!openT.has(t)).map(t=>`<button data-sq="${esc(t)}" data-sqd="${esc(d)}">＋ ${esc(t)}</button>`).join("")||`<span class="small muted">הכול ברשימה</span>`}</div>`).join("");
+  document.querySelectorAll("[data-sq]").forEach(b=>b.onclick=()=>addShopItem(b.dataset.sq, b.dataset.sqd));
+  bindShopRows();
+  const cl=$("#shopClear"); if(cl) cl.onclick=clearDone;
+}
+async function clearDone(){
+  const n = state.shop.filter(y=>y.done).length; if(!n) return false;
+  if(await askConfirm("למחוק את כל "+n+" הפריטים שסומנו?","מחיקה")){ state.shop=state.shop.filter(y=>!y.done); save(); renderShop(); return true; }
+  return false;
+}
+/* מצב קנייה בחנות: מחלקה אחת בכל פעם לפי המסלול */
+function renderShopMode(L, depts){
+  const withItems = depts.filter(d=>L.some(x=>x.dept===d));
+  const hasOpen = d => L.some(x=>x.dept===d && !x.done);
+  if (shopCur!=="__end" && !withItems.includes(shopCur)) shopCur = withItems.find(hasOpen) || "__end";
+  const total=L.length, done=L.filter(x=>x.done).length, pct = total? Math.round(done/total*100):0;
+  let html = `<div class="mvbar"><div class="progress" style="margin:0"><div class="bar"><i style="width:${pct}%"></i></div><span class="small muted">${done} מתוך ${total}</span></div></div>`;
+  if (shopCur==="__end"){
+    const left = withItems.filter(hasOpen);
+    html += left.length
+      ? `<div class="mvdone"><div class="big">🧐</div><h2 style="margin:8px 0">נשארו פריטים</h2><p class="muted">עוד לא סימנתם פריטים במחלקות:</p><div class="chips" style="justify-content:center">${left.map(d=>`<button data-mj="${esc(d)}">${esc(d)}</button>`).join("")}</div></div>`
+      : `<div class="mvdone"><div class="big">🎉</div><h2 style="margin:8px 0">${total? "קניתם הכול!":"אין מה לקנות"}</h2><button class="btn full" id="mvFinish">סיום קנייה</button></div>`;
+  } else {
+    const items = L.filter(x=>x.dept===shopCur).sort((a,b)=>(a.done-b.done));
+    const idx = withItems.indexOf(shopCur);
+    const prev = withItems.slice(0,idx).reverse().find(hasOpen);
+    const next = withItems.slice(idx+1).find(hasOpen);
+    html += deptSign(shopCur, items) + `<ul class="list mvlist">${items.map(x=>shopRow(x,true)).join("")}</ul>
+      <div class="mvnav">${prev?`<button class="btn ghost" id="mvPrev">→ ${esc(deptName(prev))}</button>`:""}<button class="btn" id="mvNext">${next?esc(deptName(next))+" ←":"סיום ←"}</button></div>`;
+    setTimeout(()=>{
+      const pv=$("#mvPrev"), nx=$("#mvNext");
+      if(pv) pv.onclick=()=>{ shopCur=prev; renderShop(); window.scrollTo(0,0); };
+      if(nx) nx.onclick=()=>{ shopCur = next || "__end"; renderShop(); window.scrollTo(0,0); };
+    },0);
+  }
+  $("#shopMv").innerHTML = html;
+  bindShopRows();
+  document.querySelectorAll("[data-mj]").forEach(b=>b.onclick=()=>{ shopCur=b.dataset.mj; renderShop(); window.scrollTo(0,0); });
+  const f=$("#mvFinish"); if(f) f.onclick=async()=>{ shopMode=false; renderShop(); window.scrollTo(0,0); await clearDone(); };
+}
+function addShopItem(title, dept, qty, unit){
+  title = (title||"").trim(); if(!title) return;
+  qty = qty>0 ? qty : 1; unit = unit||"";
+  if(!Array.isArray(state.shop)) state.shop=[];
+  const dup = state.shop.find(x=>x.title===title && !x.done);
+  if (dup){ dup.qty=(+dup.qty||1)+qty; if(unit) dup.unit=unit; save(); renderShop(); toast("הכמות עודכנה: "+dup.qty); return; }
+  const hd = state.shopHist && state.shopHist[title] && state.shopHist[title].dept;
+  const d = dept && shopDepts().includes(dept) ? dept : ((state.shopMap||{})[title] || (hd && shopDepts().includes(hd) ? hd : guessDept(title)));
+  const again = state.shop.find(x=>x.title===title && x.done);
+  if (again){ again.done=false; again.dept=d; again.qty=qty; again.unit=unit; delete again.boughtAt; }
+  else state.shop.push({id:uid(), title, done:false, dept:d, qty, unit, note:""});
+  save(); renderShop(); toast("נוסף ל"+deptName(d));
 }
 function addShop(){
   const inp=$("#shopIn"), v=inp.value.trim(); if(!v){ inp.focus(); return; }
-  if(!Array.isArray(state.shop)) state.shop=[];
-  state.shop.push({id:uid(), title:v, done:false}); inp.value=""; save(); renderShop(); inp.focus();
+  const p = parseQty(v);
+  inp.value=""; renderAc(); addShopItem(p.title, null, p.qty, p.unit); inp.focus();
 }
+function renderAc(){
+  const q = $("#shopIn").value.trim(), box = $("#shopAc");
+  if (!q){ box.innerHTML=""; return; }
+  const t = parseQty(q).title; if(!t){ box.innerHTML=""; return; }
+  const all = knownProducts().filter(x=>x!==t && x.includes(t));
+  all.sort((a,b)=>(b.startsWith(t)-a.startsWith(t)) || ((state.shopHist?.[b]?.n||0)-(state.shopHist?.[a]?.n||0)) || a.length-b.length);
+  box.innerHTML = all.slice(0,6).map(x=>`<button data-ac="${esc(x)}">${esc(x)}</button>`).join("");
+  box.querySelectorAll("[data-ac]").forEach(b=>b.onclick=()=>{ const p=parseQty(q); $("#shopIn").value=""; renderAc(); addShopItem(b.dataset.ac, null, p.qty, p.unit); $("#shopIn").focus(); });
+}
+function editShop(id){
+  const x = state.shop.find(y=>y.id===id); if(!x) return;
+  openDlg("עריכת פריט", `
+    <label class="f"><span>שם הפריט</span><input type="text" id="sT" value="${esc(x.title)}"></label>
+    <div class="two"><label class="f"><span>כמות</span><input type="number" inputmode="decimal" id="sQ" min="0" step="any" value="${+x.qty||1}"></label>
+    <label class="f"><span>יחידה</span><select id="sU">${UNITS.map(u=>`<option value="${u}" ${u===(x.unit||"")?"selected":""}>${u||"יחידות"}</option>`).join("")}</select></label></div>
+    <label class="f"><span>הערה (מותג, גודל, מה לבדוק)</span><input type="text" id="sN" value="${esc(x.note||"")}"></label>
+    <label class="f"><span>מחלקה</span><select id="sD">${shopDepts().map(d=>`<option ${d===x.dept?"selected":""}>${esc(d)}</option>`).join("")}</select></label>
+    <div class="row"><button class="btn" id="sS">שמירה</button><button class="btn ghost" id="sX" style="color:var(--danger)">מחיקה</button></div>`, body=>{
+      $("#sS",body).onclick=()=>{
+        const t=$("#sT",body).value.trim(); if(!t){ $("#sT",body).focus(); return; }
+        const d=$("#sD",body).value;
+        if (!state.shopMap || typeof state.shopMap!=="object") state.shopMap={};
+        if (d!==guessDept(t) || state.shopMap[t]) { if(d!==guessDept(t)) state.shopMap[t]=d; else delete state.shopMap[t]; }
+        const q = parseFloat($("#sQ",body).value);
+        x.title=t; x.dept=d; x.qty = q>0 ? q : 1; x.unit=$("#sU",body).value; x.note=$("#sN",body).value.trim();
+        save(); renderShop(); closeDlg(); toast("נשמר");
+      };
+      $("#sX",body).onclick=async()=>{ if(await askConfirm("למחוק את \""+x.title+"\"?","מחיקה")){ state.shop=state.shop.filter(y=>y.id!==x.id); save(); renderShop(); closeDlg(); } };
+    });
+}
+function editRoute(){
+  let work = shopDepts();
+  openDlg("סדר המחלקות בחנות", "", body=>{
+    const draw = ()=>{
+      body.innerHTML = `<p class="note" style="margin-top:0">סדרו לפי הסדר שבו אתם עוברים בחנות. הרשימה ומצב הקנייה יוצגו באותו סדר.</p>`
+        + work.map((d,i)=>`<div class="grow"><div style="flex:1;font-weight:600;border-inline-start:6px solid ${deptColor(d)};padding-inline-start:10px">${esc(d)}</div>
+          <button class="sq" data-up="${i}" ${i===0?"disabled":""} aria-label="למעלה">↑</button>
+          <button class="sq" data-dn="${i}" ${i===work.length-1?"disabled":""} aria-label="למטה">↓</button></div>`).join("")
+        + `<div class="row" style="margin-top:12px"><button class="btn" id="rS">שמירה</button><button class="btn ghost" id="rR">איפוס לברירת מחדל</button></div>`;
+      body.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.up; [work[i-1],work[i]]=[work[i],work[i-1]]; draw(); });
+      body.querySelectorAll("[data-dn]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.dn; [work[i+1],work[i]]=[work[i],work[i+1]]; draw(); });
+      $("#rS",body).onclick=()=>{ state.shopDepts=work.slice(); save(); renderShop(); closeDlg(); toast("הסדר נשמר"); };
+      $("#rR",body).onclick=()=>{ work=DEPT_DEFAULT.slice(); draw(); };
+    };
+    draw();
+  });
+}
+$("#shopRoute").onclick = editRoute;
 $("#shopAdd").onclick = addShop;
+$("#shopIn").addEventListener("input", renderAc);
 $("#shopIn").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addShop(); } });
+$("#shopMode").onclick = () => { shopMode=!shopMode; shopCur=""; renderShop(); window.scrollTo(0,0); };
 
 /* ---------- LOG ---------- */
 const LOGT = {
