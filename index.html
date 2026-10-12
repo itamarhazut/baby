@@ -204,10 +204,18 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
 
   <!-- Brit -->
   <section id="tab-brit" role="tabpanel" hidden>
+    <button class="btn ghost" id="britBack" style="margin-bottom:8px">→ חזרה</button>
     <div id="britHead"></div>
     <div id="britLists"></div>
     <p class="note" id="britNote"></p>
     <button class="fab" id="editFab" aria-pressed="false">✎ עריכה</button>
+  </section>
+
+  <!-- Shop -->
+  <section id="tab-shop" role="tabpanel" hidden>
+    <h2 style="margin-top:6px">קניות ומטלות</h2>
+    <div class="addrow" style="margin-top:0"><input type="text" id="shopIn" placeholder="מה צריך לקנות או לעשות?" enterkeyhint="done"><button class="btn" id="shopAdd">הוספה</button></div>
+    <div id="shopBody"></div>
   </section>
 
   <!-- Checks -->
@@ -233,7 +241,7 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
 <nav class="tabs" role="tablist">
   <div class="in">
     <button role="tab" data-tab="baby" aria-selected="true"><span class="ic">👶</span>התינוק</button>
-    <button role="tab" data-tab="brit" aria-selected="false"><span class="ic">✡️</span>ברית</button>
+    <button role="tab" data-tab="shop" aria-selected="false"><span class="ic">🛒</span>קניות</button>
     <button role="tab" data-tab="checks" aria-selected="false"><span class="ic">🩺</span>בדיקות</button>
     <button role="tab" data-tab="log" aria-selected="false"><span class="ic">🍼</span>יומן</button>
   </div>
@@ -285,7 +293,7 @@ function defaults(){
   return {
     baby:{name:"",hebName:"",idNum:"",birthDate:"",birthTime:"",afterSunset:false,britOverride:"",weight:"",length:"",head:"",blood:"",
       hospital:"",hmo:"",pediatrician:"",pediatricianPhone:"",tipat:"",tipatPhone:"",father:"",mother:"",notes:""},
-    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], log:[], updatedAt:0
+    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], shop:[], log:[], updatedAt:0
   };
 }
 
@@ -316,6 +324,8 @@ const SECTIONS = {
            set:d=>{ if(Array.isArray(d.brit)) state.brit=d.brit; state.groups=Array.isArray(d.groups)?d.groups:null; state.afterGroup=(typeof d.afterGroup==="string")?d.afterGroup:"אחרי הברית"; }},
   checks: {get:()=>({checks:state.checks}),
            set:d=>{ if(Array.isArray(d.checks)) state.checks=d.checks; }},
+  shop:   {get:()=>({shop:state.shop}),
+           set:d=>{ state.shop = Array.isArray(d.shop)?d.shop:[]; }},
   growth: {get:()=>({growth:state.growth}),
            set:d=>{ state.growth = Array.isArray(d.growth)?d.growth:[]; }}
 };
@@ -505,8 +515,10 @@ $("#gear").onclick = async () => {
     <p class="note">בן או בת הזוג יוצרים חשבון, ובמסך "עוד צעד קטן" מקלידים את הקוד.</p>
     <button class="btn ghost full" id="copyCode">העתקת הקוד</button>` : `<p class="note">אין חיבור כרגע.</p>`}
     <div style="height:18px"></div>
+    <button class="btn ghost full" id="archBtn" style="margin-bottom:10px">📦 ארכיון: משימות הברית</button>
     <button class="btn ghost full" id="outBtn" style="color:var(--danger)">יציאה מהחשבון</button>`, body => {
       const cc = $("#copyCode", body); if (cc) cc.onclick = async () => { try { await navigator.clipboard.writeText(code); toast("הקוד הועתק"); } catch(e){ toast("לא הצלחתי להעתיק"); } };
+      $("#archBtn", body).onclick = () => { closeDlg(); showTab("brit"); };
       $("#outBtn", body).onclick = async () => { if (await askConfirm("לצאת מהחשבון? הנתונים נשמרים בענן ויחזרו אחרי כניסה.", "יציאה")) signOut(); };
     });
 };
@@ -530,7 +542,20 @@ function today0(){ const t=new Date(); t.setHours(0,0,0,0); return t; }
 function diffDays(a,b){ return Math.round((a-b)/86400000); }
 const fmtShort = d => d.toLocaleDateString("he-IL",{weekday:"short",day:"numeric",month:"numeric"});
 const fmtLong = d => d.toLocaleDateString("he-IL",{day:"numeric",month:"long",year:"numeric"});
-function hebDate(d){ try{ return new Intl.DateTimeFormat("he-IL-u-ca-hebrew",{day:"numeric",month:"long",year:"numeric"}).format(d); }catch(e){ return ""; } }
+function gem(n){
+  const U=["","א","ב","ג","ד","ה","ו","ז","ח","ט"],T=["","י","כ","ל","מ","נ","ס","ע","פ","צ"],H=["","ק","ר","ש","ת"];
+  let r="";
+  while(n>=400){ r+="ת"; n-=400; }
+  if(n>=100){ r+=H[Math.floor(n/100)]; n%=100; }
+  if(n===15) r+="טו"; else if(n===16) r+="טז"; else { r+=T[Math.floor(n/10)]+U[n%10]; }
+  return r.length===1 ? r+"׳" : r.slice(0,-1)+"״"+r.slice(-1);
+}
+function hebDate(d){
+  try{
+    const p = {}; new Intl.DateTimeFormat("he-IL-u-ca-hebrew",{day:"numeric",month:"long",year:"numeric"}).formatToParts(d).forEach(x=>p[x.type]=x.value);
+    return gem(+p.day)+" ב"+p.month+" "+gem(+p.year % 1000);
+  }catch(e){ return ""; }
+}
 function britDate(){
   const b = state.baby;
   if (b.britOverride) return parseD(b.britOverride);
@@ -568,12 +593,14 @@ function askConfirm(msg, okText){
   });
 }
 /* ---------- tabs ---------- */
-document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => {
-  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x===b));
-  document.querySelectorAll("main > section").forEach(s => s.hidden = s.id !== "tab-"+b.dataset.tab);
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab===name));
+  document.querySelectorAll("main > section").forEach(s => s.hidden = s.id !== "tab-"+name);
   window.scrollTo(0,0);
-  try{ localStorage.setItem("baby-app-tab", b.dataset.tab); }catch(e){}
-});
+  if (name!=="brit") try{ localStorage.setItem("baby-app-tab", name); }catch(e){}
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$("#britBack").onclick = () => { editMode=false; renderBrit(); showTab("baby"); };
 
 /* ---------- BABY ---------- */
 let idShown = false;
@@ -608,10 +635,9 @@ function renderBaby(){
     if (d > 0){ big = d; line = d===1 ? "הברית מחר" : "ימים עד הברית"; }
     else if (d === 0){ big = "🎉"; line = "הברית היום! מזל טוב"; }
     else { big = "✓"; line = "הברית הייתה"; }
-    const openTasks = state.brit.filter(t=>!t.done && t.group!==state.afterGroup).length;
     $("#britStrip").innerHTML = `<div class="brit-strip"><div class="num">${big}</div><div><div class="t">${line}</div>
       <div class="small muted">${fmtShort(bdt)}, ${esc(hebDate(bdt))}${b.britOverride?" (נקבע ידנית)":""}</div>
-      ${d>=0 && openTasks? `<div class="small">${openTasks} משימות פתוחות לברית</div>`:""}</div></div>`;
+      </div></div>`;
   } else $("#britStrip").innerHTML = "";
 
   const rows = [
@@ -685,7 +711,7 @@ function renderBrit(){
   const t = state.brit, done = t.filter(x=>x.done).length, bdt = britDate();
   let when = "";
   if (bdt){ const d=diffDays(bdt,today0()); when = d>1? `בעוד ${d} ימים, ${fmtShort(bdt)}` : d===1? `מחר, ${fmtShort(bdt)}` : d===0? "היום! מזל טוב 🎉" : `התקיימה ב־${fmtShort(bdt)}`; }
-  $("#britHead").innerHTML = `<h2 style="margin-top:6px">משימות לברית</h2>
+  $("#britHead").innerHTML = `<h2 style="margin-top:6px">ארכיון: משימות לברית</h2>
     ${when?`<div class="muted" style="margin-bottom:8px">הברית ${when}</div>`:`<div class="muted small" style="margin-bottom:8px">הוסיפו תאריך לידה בכרטיס התינוק כדי לחשב את יום הברית.</div>`}
     <div class="progress"><div class="bar"><i style="width:${t.length?Math.round(done/t.length*100):0}%"></i></div><span class="small muted">${done} מתוך ${t.length}</span></div>
     ${editMode?`<div class="row" style="margin-top:10px"><button class="btn ghost" id="editGroups">עריכת קבוצות</button></div>`:""}`;
@@ -913,12 +939,38 @@ function editCheck(id){
 }
 $("#addCheck").onclick = () => editCheck(null);
 
+/* ---------- SHOP ---------- */
+function renderShop(){
+  if(!Array.isArray(state.shop)) state.shop=[];
+  const L = state.shop, open = L.filter(x=>!x.done), done = L.filter(x=>x.done);
+  const row = x => `<li class="${x.done?"done":""}"><input type="checkbox" class="chk" data-sc="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
+    <div class="body"><div class="title">${esc(x.title)}</div></div><button class="more" data-sd="${x.id}" aria-label="מחיקה">🗑</button></li>`;
+  $("#shopBody").innerHTML = (L.length ? "" : `<div class="panel" style="margin-top:12px"><div class="empty">הרשימה ריקה. מוסיפים פריט למעלה והוא יופיע גם אצל בן או בת הזוג.</div></div>`)
+    + (open.length ? `<h3>לקנות / לעשות (${open.length})</h3><ul class="list">${open.map(row).join("")}</ul>` : "")
+    + (done.length ? `<h3>סומן (${done.length})</h3><ul class="list">${done.map(row).join("")}</ul><button class="addbtn" id="shopClear">ניקוי כל הפריטים שסומנו</button>` : "");
+  document.querySelectorAll("[data-sc]").forEach(c=>c.onchange=()=>{ const x=state.shop.find(y=>y.id===c.dataset.sc); if(x){ x.done=c.checked; save(); renderShop(); } });
+  document.querySelectorAll("[data-sd]").forEach(c=>c.onclick=async()=>{
+    const x=state.shop.find(y=>y.id===c.dataset.sd); if(!x) return;
+    if(await askConfirm("למחוק את \""+x.title+"\"?","מחיקה")){ state.shop=state.shop.filter(y=>y.id!==x.id); save(); renderShop(); }
+  });
+  const cl=$("#shopClear"); if(cl) cl.onclick=async()=>{ if(await askConfirm("למחוק את כל "+done.length+" הפריטים שסומנו?","מחיקה")){ state.shop=state.shop.filter(y=>!y.done); save(); renderShop(); } };
+}
+function addShop(){
+  const inp=$("#shopIn"), v=inp.value.trim(); if(!v){ inp.focus(); return; }
+  if(!Array.isArray(state.shop)) state.shop=[];
+  state.shop.push({id:uid(), title:v, done:false}); inp.value=""; save(); renderShop(); inp.focus();
+}
+$("#shopAdd").onclick = addShop;
+$("#shopIn").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addShop(); } });
+
 /* ---------- LOG ---------- */
 const LOGT = {
-  right:{ic:"🤱",t:"הנקה ימין",feed:1}, left:{ic:"🤱",t:"הנקה שמאל",feed:1}, bottle:{ic:"🍼",t:"בקבוק",feed:1},
-  wet:{ic:"💧",t:"חיתול רטוב",diaper:1}, dirty:{ic:"💩",t:"חיתול מלוכלך",diaper:1}, sleep:{ic:"😴",t:"נרדם"}
+  bottle:{ic:"🍼",t:"בקבוק",feed:1},
+  wet:{ic:"💧",t:"חיתול רטוב",diaper:1}, dirty:{ic:"💩",t:"חיתול מלוכלך",diaper:1}, sleep:{ic:"😴",t:"נרדם"},
+  novimol:{ic:"💊",t:"נובימול"}, bepanthen:{ic:"🧴",t:"בפנטן"},
+  right:{ic:"🤱",t:"הנקה ימין",feed:1,old:1}, left:{ic:"🤱",t:"הנקה שמאל",feed:1,old:1}
 };
-$("#quick").innerHTML = Object.entries(LOGT).map(([k,v])=>`<button data-lg="${k}"><span class="ic">${v.ic}</span>${v.t}</button>`).join("");
+$("#quick").innerHTML = Object.entries(LOGT).filter(([k,v])=>!v.old).map(([k,v])=>`<button data-lg="${k}"><span class="ic">${v.ic}</span>${v.t}</button>`).join("");
 document.querySelectorAll("[data-lg]").forEach(b=>b.onclick=()=>{
   const type=b.dataset.lg;
   const add = note => { state.log.push({id:uid(), t:Date.now(), type, note}); save(); renderLog(); toast(LOGT[type].t+" נרשם"); };
@@ -956,7 +1008,7 @@ function renderLog(){
 setInterval(()=>{ if(!$("#tab-log").hidden) renderLog(); }, 60000);
 
 /* ---------- boot ---------- */
-function renderAll(){ renderBaby(); renderBrit(); renderChecks(); renderLog(); }
+function renderAll(){ renderBaby(); renderBrit(); renderShop(); renderChecks(); renderLog(); }
 renderAll();
 try{ const tab=localStorage.getItem("baby-app-tab"); if(tab){ const b=document.querySelector(`nav.tabs button[data-tab="${tab}"]`); b && b.click(); } }catch(e){}
 boot();
