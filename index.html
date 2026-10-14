@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="התינוק שלנו">
+<meta name="apple-mobile-web-app-title" content="משפחת חזות">
 <meta name="theme-color" content="#F2F6FB">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>התינוק שלנו</title>
+<title>משפחת חזות</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet">
@@ -55,7 +55,7 @@ h3{font-size:15px;color:var(--muted);font-weight:700;margin:22px 0 8px}
 /* Tab bar */
 nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
-nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr)}
 nav.tabs button{background:none;border:0;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;color:var(--muted)}
 nav.tabs button .ic{font-size:22px;line-height:1}
 nav.tabs button[aria-selected="true"]{color:var(--ink);font-weight:700}
@@ -168,6 +168,35 @@ dialog .db{padding:14px 18px 18px}
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chips button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:15px}
 .chips button:active{background:var(--sky)}
+.daychips{display:flex;gap:6px;flex-wrap:wrap}
+.daychips button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:15px}
+.daychips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.nrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.nrow:last-child{border-bottom:0}
+.nrow .body{flex:1;min-width:0}
+.nrow .t{font-weight:600}.nrow .m{font-size:13.5px;color:var(--muted)}
+.nbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin-bottom:12px}
+.nbox h3{margin:10px 0 4px}
+.okmsg{color:var(--done);font-weight:600}
+.shopcard{display:flex;align-items:center;gap:14px;width:100%;text-align:start;background:linear-gradient(135deg,#2F8F4E,#2E78C7);color:#fff;border:0;border-radius:18px;padding:16px 18px;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+.shopcard .ic{font-size:34px;line-height:1}
+.shopcard .tx{flex:1}.shopcard b{display:block;font-size:20px;font-family:var(--serif)}
+.shopcard small{display:block;opacity:.9;font-size:14px;margin-top:2px}
+.shopcard .ar{font-size:24px}
+.backbtn{flex:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:22px}
+#imriSheet{position:fixed;inset:0;z-index:15}
+#imriSheet[hidden]{display:none}
+.sheetbg{position:absolute;inset:0;background:rgba(10,15,30,.35)}
+.sheet{position:absolute;left:12px;width:min(360px,calc(100% - 24px));bottom:calc(66px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,.28)}
+.sheetname{font-family:var(--serif);font-weight:900;font-size:19px;padding:8px 12px 4px}
+.sheet button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-radius:14px;padding:11px 12px;font-size:17px;font-weight:700;text-align:start;color:var(--ink)}
+.sheet button .ic{font-size:26px;line-height:1}
+.sheet button small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-inline-start:auto}
+.sheet button.cur{background:var(--sky)}
+.sheet button:active{background:var(--sky)}
+body.full nav.tabs{display:none}
+body.full main{padding-bottom:40px}
+body.full .toast{bottom:24px}
 .shophead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 .shophead .btn{padding:9px 14px;font-size:15px}
 .chips.ac{margin-top:8px}
@@ -212,7 +241,7 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
 </head>
 <body>
 <header class="top">
-  <h1 id="appTitle">התינוק שלנו</h1>
+  <h1 id="appTitle">משפחת חזות</h1>
   <div class="hr"><span class="sync" id="sync">שומר במכשיר</span><button class="gear" id="gear" aria-label="הגדרות">⚙️</button></div>
 </header>
 <div id="gate" hidden><div class="gatebox" id="gateBox"></div></div>
@@ -242,9 +271,18 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
     <button class="fab" id="editFab" aria-pressed="false">✎ עריכה</button>
   </section>
 
+  <!-- Tasks hub -->
+  <section id="tab-tasks" role="tabpanel" hidden>
+    <div class="shophead" style="margin-bottom:12px"><h2 style="margin:6px 0 0;flex:1">משימות</h2><button class="btn ghost" id="openNotif" style="padding:9px 14px;font-size:15px">🔔 התראות</button></div>
+    <button class="shopcard" id="openShop"><span class="ic">🛒</span><span class="tx"><b>קניות</b><small id="shopCardSub"></small></span><span class="ar">←</span></button>
+    <h3>מה צריך לעשות</h3>
+    <div class="addrow" style="margin-top:0"><input type="text" id="taskIn" placeholder="משימה חדשה" enterkeyhint="done" autocomplete="off"><button class="btn" id="taskAdd">הוספה</button></div>
+    <div id="taskBody"></div>
+  </section>
+
   <!-- Shop -->
   <section id="tab-shop" role="tabpanel" hidden>
-    <div class="shophead"><h2 style="margin:6px 0 0">קניות</h2><button class="btn gold" id="shopMode">🛒 התחלת קנייה</button></div>
+    <div class="shophead"><button class="backbtn" id="shopBack" aria-label="חזרה">→</button><h2 style="margin:0;flex:1">קניות</h2><button class="btn gold" id="shopMode">🛒 התחלת קנייה</button></div>
     <div id="shopNormal">
       <div class="addrow"><input type="text" id="shopIn" placeholder="מה צריך לקנות? אפשר גם: 2 חלב" enterkeyhint="done" autocomplete="off"><button class="btn" id="shopAdd">הוספה</button></div>
       <div id="shopAc" class="chips ac"></div>
@@ -278,12 +316,17 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
 
 <nav class="tabs" role="tablist">
   <div class="in">
-    <button role="tab" data-tab="baby" aria-selected="true"><span class="ic">👶</span>התינוק</button>
-    <button role="tab" data-tab="shop" aria-selected="false"><span class="ic">🛒</span>קניות</button>
-    <button role="tab" data-tab="checks" aria-selected="false"><span class="ic">🩺</span>בדיקות</button>
-    <button role="tab" data-tab="log" aria-selected="false"><span class="ic">🍼</span>יומן</button>
+    <button role="tab" data-tab="tasks" aria-selected="false"><span class="ic">✅</span>משימות</button>
+    <button role="tab" data-tab="imri" aria-selected="true"><span class="ic">👶</span><span id="navImriName">התינוק</span></button>
   </div>
 </nav>
+
+<div id="imriSheet" hidden><div class="sheetbg" id="sheetBg"></div><div class="sheet" role="menu">
+  <div class="sheetname" id="sheetName"></div>
+  <button role="menuitem" data-go="baby"><span class="ic">👶</span>הפרטים שלי<small>כרטיס, פרטים, גדילה</small></button>
+  <button role="menuitem" data-go="log"><span class="ic">🍼</span>יומן<small>האכלות, חיתולים, תרופות</small></button>
+  <button role="menuitem" data-go="checks"><span class="ic">🩺</span>בדיקות<small>תורים וחיסונים</small></button>
+</div></div>
 
 <dialog id="dlg"><div class="dh"><h2 id="dlgTitle"></h2><button class="more" id="dlgClose" aria-label="סגירה">✕</button></div><div class="db" id="dlgBody"></div></dialog>
 <dialog id="cdlg"><div class="db"><p id="cmsg" style="margin:4px 0 16px;font-weight:600"></p>
@@ -331,7 +374,7 @@ function defaults(){
   return {
     baby:{name:"",hebName:"",idNum:"",birthDate:"",birthTime:"",afterSunset:false,britOverride:"",weight:"",length:"",head:"",blood:"",
       hospital:"",hmo:"",pediatrician:"",pediatricianPhone:"",tipat:"",tipatPhone:"",father:"",mother:"",notes:""},
-    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], shop:[], shopDepts:null, shopMap:{}, shopHist:{}, log:[], updatedAt:0
+    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], shop:[], tasks:[], reminders:{tz:"Asia/Jerusalem",items:[],feed:{enabled:true,hours:3,quietFrom:"",quietTo:""},tasks:{enabled:true}}, shopDepts:null, shopMap:{}, shopHist:{}, log:[], updatedAt:0
   };
 }
 
@@ -364,6 +407,10 @@ const SECTIONS = {
            set:d=>{ if(Array.isArray(d.checks)) state.checks=d.checks; }},
   shop:   {get:()=>({shop:state.shop, depts:state.shopDepts||null, map:state.shopMap||{}, hist:state.shopHist||{}}),
            set:d=>{ state.shop = Array.isArray(d.shop)?d.shop:[]; state.shopDepts = Array.isArray(d.depts)?d.depts:null; state.shopMap = (d.map && typeof d.map==="object")?d.map:{}; state.shopHist = (d.hist && typeof d.hist==="object")?d.hist:{}; }},
+  tasks:  {get:()=>({tasks:state.tasks||[]}),
+           set:d=>{ state.tasks = Array.isArray(d.tasks)?d.tasks:[]; }},
+  reminders: {get:()=>({tz:"Asia/Jerusalem", items:(state.reminders&&state.reminders.items)||[], feed:(state.reminders&&state.reminders.feed)||{enabled:true,hours:3,quietFrom:"",quietTo:""}, tasks:(state.reminders&&state.reminders.tasks)||{enabled:true}}),
+           set:d=>{ state.reminders = {tz:d.tz||"Asia/Jerusalem", items:Array.isArray(d.items)?d.items:[], feed:Object.assign({enabled:true,hours:3,quietFrom:"",quietTo:""}, d.feed||{}), tasks:Object.assign({enabled:true}, d.tasks||{})}; }},
   growth: {get:()=>({growth:state.growth}),
            set:d=>{ state.growth = Array.isArray(d.growth)?d.growth:[]; }}
 };
@@ -486,7 +533,7 @@ function showSetupMissing(){
   showGate(`<h1>חסר חיבור ל-Supabase</h1><p class="muted">צריך למלא את הקובץ <b dir="ltr">config.js</b> עם הכתובת והמפתח של הפרויקט שלכם ב-Supabase. הפרטים בקובץ README.</p>`);
 }
 function showAuth(msg){
-  showGate(`<h1>התינוק שלנו</h1>
+  showGate(`<h1>משפחת חזות</h1>
     <p class="muted">כניסה לחשבון. שניכם נכנסים עם חשבון משלכם ורואים את אותם נתונים.</p>
     <label class="f"><span>אימייל</span><input type="email" id="aE" autocomplete="email" inputmode="email" dir="ltr"></label>
     <label class="f"><span>סיסמה</span><input type="password" id="aP" autocomplete="current-password" dir="ltr"></label>
@@ -553,9 +600,11 @@ $("#gear").onclick = async () => {
     <p class="note">בן או בת הזוג יוצרים חשבון, ובמסך "עוד צעד קטן" מקלידים את הקוד.</p>
     <button class="btn ghost full" id="copyCode">העתקת הקוד</button>` : `<p class="note">אין חיבור כרגע.</p>`}
     <div style="height:18px"></div>
+    <button class="btn ghost full" id="notifBtn" style="margin-bottom:10px">🔔 התראות ותזכורות</button>
     <button class="btn ghost full" id="archBtn" style="margin-bottom:10px">📦 ארכיון: משימות הברית</button>
     <button class="btn ghost full" id="outBtn" style="color:var(--danger)">יציאה מהחשבון</button>`, body => {
       const cc = $("#copyCode", body); if (cc) cc.onclick = async () => { try { await navigator.clipboard.writeText(code); toast("הקוד הועתק"); } catch(e){ toast("לא הצלחתי להעתיק"); } };
+      $("#notifBtn", body).onclick = () => openNotifs();
       $("#archBtn", body).onclick = () => { closeDlg(); showTab("brit"); };
       $("#outBtn", body).onclick = async () => { if (await askConfirm("לצאת מהחשבון? הנתונים נשמרים בענן ויחזרו אחרי כניסה.", "יציאה")) signOut(); };
     });
@@ -631,20 +680,39 @@ function askConfirm(msg, okText){
   });
 }
 /* ---------- tabs ---------- */
+const IMRI_TABS = ["baby","log","checks"], TASK_TABS = ["tasks","shop"];
+let curTab = "baby";
 function showTab(name){
-  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab===name));
+  curTab = name;
+  const grp = IMRI_TABS.includes(name) ? "imri" : TASK_TABS.includes(name) ? "tasks" : "";
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab===grp));
   document.querySelectorAll("main > section").forEach(s => s.hidden = s.id !== "tab-"+name);
+  document.body.classList.toggle("full", name==="shop");
+  closeSheet();
   window.scrollTo(0,0);
   if (name!=="brit") try{ localStorage.setItem("baby-app-tab", name); }catch(e){}
 }
-document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+function openSheet(){
+  const cur = IMRI_TABS.includes(curTab) ? curTab : "";
+  $("#sheetName").textContent = $("#navImriName").textContent;
+  document.querySelectorAll("#imriSheet [data-go]").forEach(b=>b.classList.toggle("cur", b.dataset.go===cur));
+  $("#imriSheet").hidden = false;
+}
+function closeSheet(){ $("#imriSheet").hidden = true; }
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => {
+  if (b.dataset.tab==="imri"){ $("#imriSheet").hidden ? openSheet() : closeSheet(); }
+  else showTab("tasks");
+});
+document.querySelectorAll("#imriSheet [data-go]").forEach(b => b.onclick = () => showTab(b.dataset.go));
+$("#sheetBg").onclick = closeSheet;
+document.addEventListener("keydown", e => { if (e.key==="Escape") closeSheet(); });
 $("#britBack").onclick = () => { editMode=false; renderBrit(); showTab("baby"); };
 
 /* ---------- BABY ---------- */
 let idShown = false;
 function renderBaby(){
   const b = state.baby;
-  $("#appTitle").textContent = b.hebName || b.name ? "שלום, " + (b.hebName || b.name) : "התינוק שלנו";
+  $("#navImriName").textContent = (b.hebName || b.name || "התינוק").split(/\s+/)[0];
   const bd = parseD(b.birthDate);
   const idDisp = b.idNum ? (idShown ? b.idNum : "•••••" + b.idNum.slice(-4)) : "—";
   $("#cardWrap").innerHTML = `
@@ -1092,6 +1160,7 @@ function renderShop(){
   L.forEach(x=>{ if(!x.dept || !depts.includes(x.dept)) x.dept = DEPT_OTHER; });
   $("#shopNormal").hidden = shopMode; $("#shopMv").hidden = !shopMode;
   $("#shopMode").textContent = shopMode ? "✕ יציאה מקנייה" : "🛒 התחלת קנייה";
+  renderTasks();
   if (shopMode){ renderShopMode(L, depts); return; }
   let html = L.length ? "" : `<div class="panel" style="margin-top:12px"><div class="empty">הרשימה ריקה. הוסיפו פריט למעלה, והוא יופיע גם אצל בן או בת הזוג.</div></div>`;
   depts.forEach(d=>{
@@ -1217,6 +1286,143 @@ $("#shopIn").addEventListener("input", renderAc);
 $("#shopIn").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addShop(); } });
 $("#shopMode").onclick = () => { shopMode=!shopMode; shopCur=""; renderShop(); window.scrollTo(0,0); };
 
+/* ---------- TASKS ---------- */
+function renderTasks(){
+  if(!Array.isArray(state.tasks)) state.tasks=[];
+  const openShop = (state.shop||[]).filter(x=>!x.done).length;
+  $("#shopCardSub").textContent = openShop ? openShop+" פריטים לקנות" : "הרשימה ריקה";
+  const L = state.tasks.slice().sort((a,b)=>(a.done-b.done));
+  const row = x => `<li class="${x.done?"done":""}"><input type="checkbox" class="chk" data-tk="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
+    <div class="body"><div class="title">${esc(x.title)}</div>${x.due?`<div class="meta">⏰ ${esc(fmtShort(parseD(x.due)))}${x.dueTime?" "+esc(x.dueTime):""}</div>`:""}${x.note?`<div class="meta">${esc(x.note)}</div>`:""}</div>
+    <button class="chip ${x.who||""}" data-tkw="${x.id}">${WHO_TXT[x.who||""]}</button>
+    <button class="more" data-tke="${x.id}" aria-label="עריכה">⋯</button></li>`;
+  const doneN = L.filter(x=>x.done).length;
+  $("#taskBody").innerHTML = L.length
+    ? `<ul class="list" style="margin-top:12px">${L.map(row).join("")}</ul>` + (doneN? `<button class="addbtn" id="taskClear" style="margin-top:12px">ניקוי כל המשימות שסומנו (${doneN})</button>`:"")
+    : `<div class="panel" style="margin-top:12px"><div class="empty">אין משימות. הוסיפו משימה למעלה, והיא תופיע גם אצל בן או בת הזוג.</div></div>`;
+  const find = id => state.tasks.find(y=>y.id===id);
+  document.querySelectorAll("[data-tk]").forEach(c=>c.onchange=()=>{ const x=find(c.dataset.tk); if(x){ x.done=c.checked; save(); renderTasks(); } });
+  document.querySelectorAll("[data-tkw]").forEach(c=>c.onclick=()=>{ const x=find(c.dataset.tkw); if(x){ x.who=WHO[(WHO.indexOf(x.who||"")+1)%3]; save(); renderTasks(); } });
+  document.querySelectorAll("[data-tke]").forEach(c=>c.onclick=()=>editTask2(c.dataset.tke));
+  const cl=$("#taskClear"); if(cl) cl.onclick=async()=>{ if(await askConfirm("למחוק את כל "+doneN+" המשימות שסומנו?","מחיקה")){ state.tasks=state.tasks.filter(y=>!y.done); save(); renderTasks(); } };
+}
+function addTask(){
+  const inp=$("#taskIn"), v=inp.value.trim(); if(!v){ inp.focus(); return; }
+  if(!Array.isArray(state.tasks)) state.tasks=[];
+  state.tasks.push({id:uid(), title:v, who:"", done:false, note:""}); inp.value=""; save(); renderTasks(); inp.focus();
+}
+function editTask2(id){
+  const x = state.tasks.find(y=>y.id===id); if(!x) return;
+  openDlg("עריכת משימה", `
+    <label class="f"><span>משימה</span><input type="text" id="kT" value="${esc(x.title)}"></label>
+    <label class="f"><span>הערה</span><textarea id="kN">${esc(x.note||"")}</textarea></label>
+    <div class="two"><label class="f"><span>תזכורת בתאריך</span><input type="date" id="kD" value="${esc(x.due||"")}"></label>
+    <label class="f"><span>בשעה</span><input type="time" id="kH" value="${esc(x.dueTime||"")}"></label></div>
+    <p class="note" style="margin-top:-4px">בלי שעה, ההתראה תישלח ב־09:00. ההתראה נשלחת לשני המכשירים.</p>
+    <div class="row"><button class="btn" id="kS">שמירה</button><button class="btn ghost" id="kX" style="color:var(--danger)">מחיקה</button></div>`, body=>{
+      $("#kS",body).onclick=()=>{ const t=$("#kT",body).value.trim(); if(!t){ $("#kT",body).focus(); return; } x.title=t; x.note=$("#kN",body).value.trim(); x.due=$("#kD",body).value||""; x.dueTime=x.due?($("#kH",body).value||""):""; save(); renderTasks(); closeDlg(); toast("נשמר"); };
+      $("#kX",body).onclick=async()=>{ if(await askConfirm("למחוק את \""+x.title+"\"?","מחיקה")){ state.tasks=state.tasks.filter(y=>y.id!==x.id); save(); renderTasks(); closeDlg(); } };
+    });
+}
+$("#taskAdd").onclick = addTask;
+$("#taskIn").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addTask(); } });
+$("#openShop").onclick = () => showTab("shop");
+$("#shopBack").onclick = () => { shopMode=false; renderShop(); showTab("tasks"); };
+
+/* ---------- NOTIFICATIONS ---------- */
+const VAPID_PUBLIC = "BJ1rOeaY-Ay_K-Vq5jYgTZ_UYEsTYsoMYfkj5BH3zRR-urcRTDW5DxD9mdkwGBOA7vzPC_yzm3nAGNHd34JNTFA";
+const DAYN = ["א","ב","ג","ד","ה","ו","ש"];
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+const isStandalone = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+function b64u(str){ const pad="=".repeat((4-str.length%4)%4); const b=atob((str+pad).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...b].map(c=>c.charCodeAt(0))); }
+const swReady = () => Promise.race([navigator.serviceWorker.ready, new Promise((_,rej)=>setTimeout(()=>rej(new Error("service worker not ready")),4000))]);
+async function devSub(){ try{ const reg = await swReady(); return await reg.pushManager.getSubscription(); }catch(e){ return null; } }
+async function enablePush(){
+  if (!sb || !familyId) throw new Error("אין חיבור לשרת");
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") throw new Error(perm==="denied" ? "ההרשאה נחסמה. אפשר לאשר אותה בהגדרות הטלפון תחת התראות." : "לא אושרה הרשאה");
+  let reg; try{ reg = await swReady(); }catch(e){ throw new Error("האפליקציה עדיין נטענת. נסו שוב בעוד רגע."); }
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64u(VAPID_PUBLIC)});
+  const j = sub.toJSON(); const {data} = await sb.auth.getSession(); const uid = data.session && data.session.user && data.session.user.id;
+  const r = await sb.from("push_subscriptions").upsert({family_id:familyId, user_id:uid, endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, ua:navigator.userAgent.slice(0,200)}, {onConflict:"endpoint"});
+  if (r.error) throw new Error("השמירה בשרת נכשלה");
+}
+async function disablePush(){
+  const sub = await devSub(); if (!sub) return;
+  const ep = sub.endpoint; try{ await sub.unsubscribe(); }catch(e){}
+  try{ await sb.from("push_subscriptions").delete().eq("endpoint", ep); }catch(e){}
+}
+async function testPush(){
+  const {data} = await sb.auth.getSession(); const tok = data.session && data.session.access_token;
+  const res = await fetch(CFG.SUPABASE_URL.replace(/\/+$/,"")+"/functions/v1/push-tick", {method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer "+tok, "apikey":CFG.SUPABASE_ANON_KEY}, body:"{}"});
+  const j = await res.json().catch(()=>({})); if(!res.ok) throw new Error(j.error||"שגיאה");
+  return j;
+}
+function rem(){ if(!state.reminders||typeof state.reminders!=="object") state.reminders={}; const r=state.reminders;
+  if(!Array.isArray(r.items)) r.items=[]; r.feed=Object.assign({enabled:true,hours:3,quietFrom:"",quietTo:""}, r.feed||{}); r.tasks=Object.assign({enabled:true}, r.tasks||{}); r.tz=r.tz||"Asia/Jerusalem"; return r; }
+function daysText(d){ return !d||!d.length||d.length===7 ? "כל יום" : "בימים "+d.slice().sort().map(i=>DAYN[i]).join(", "); }
+function openNotifs(){
+  const r = rem();
+  openDlg("התראות ותזכורות", "", async body => {
+    const sub = pushSupported() ? await devSub() : null;
+    const perm = pushSupported() ? Notification.permission : "unsupported";
+    const draw = () => {
+      let dev = "";
+      if (!pushSupported()) dev = isIOS && !isStandalone()
+        ? `<p class="note" style="margin:8px 0">באייפון צריך קודם להתקין את האפליקציה: כפתור השיתוף ב־Safari ואז "הוספה למסך הבית", ולפתוח אותה מהאייקון. אחר כך חוזרים לכאן.</p>`
+        : `<p class="note" style="margin:8px 0">הדפדפן הזה לא תומך בהתראות. אפשר להשתמש ב־Chrome בגלקסי, או באפליקציה המותקנת באייפון.</p>`;
+      else dev = sub
+        ? `<p class="okmsg" style="margin:8px 0">✓ התראות פעילות במכשיר הזה</p><div class="row"><button class="btn ghost" id="nTest">שליחת התראת בדיקה</button><button class="btn ghost" id="nOff" style="color:var(--danger)">כיבוי במכשיר הזה</button></div>`
+        : `<p class="note" style="margin:8px 0">${perm==="denied"?"ההתראות חסומות במכשיר. אפשר לאשר אותן בהגדרות הטלפון תחת התראות.":"ההתראות כבויות במכשיר הזה."}</p><button class="btn full" id="nOn">הפעלת התראות במכשיר הזה</button>`;
+      body.innerHTML = `
+      <div class="nbox"><h3>המכשיר הזה</h3>${dev}<div id="nMsg" class="small muted" style="margin:6px 0 8px"></div></div>
+      <div class="nbox"><h3>🍼 האכלה שלא סומנה</h3>
+        <label class="inline-check" style="margin-top:8px"><input type="checkbox" id="fEn" ${r.feed.enabled?"checked":""}> להתריע אם לא סומנה האכלה</label>
+        <div class="two"><label class="f"><span>אחרי כמה שעות</span><input type="number" id="fH" inputmode="decimal" min="0.5" step="0.5" value="${r.feed.hours}"></label><span></span></div>
+        <div class="two"><label class="f"><span>שקט מהשעה</span><input type="time" id="fQf" value="${esc(r.feed.quietFrom||"")}"></label><label class="f"><span>עד השעה</span><input type="time" id="fQt" value="${esc(r.feed.quietTo||"")}"></label></div>
+        <p class="note" style="margin:-4px 0 8px">בשעות השקט לא נשלחות התראות האכלה. אפשר להשאיר ריק.</p></div>
+      <div class="nbox"><h3>✅ משימות עם מועד</h3>
+        <label class="inline-check" style="margin-top:8px"><input type="checkbox" id="tEn" ${r.tasks.enabled?"checked":""}> להתריע בזמן של משימה שהגדרתי לה מועד</label>
+        <p class="note" style="margin:-4px 0 8px">מועד מגדירים במסך משימות: ⋯ ליד משימה, ואז "תזכורת בתאריך".</p></div>
+      <div class="nbox"><h3>⏰ תזכורות קבועות</h3>
+        ${r.items.length ? r.items.map(i=>`<div class="nrow"><input type="checkbox" class="chk" data-rn="${i.id}" ${i.enabled!==false?"checked":""} aria-label="פעיל"><div class="body"><div class="t">${esc(i.title)}</div><div class="m">${esc(i.time)} · ${daysText(i.days)}</div></div><button class="more" data-re="${i.id}" aria-label="עריכה">⋯</button></div>`).join("") : `<p class="note" style="margin:8px 0">אין תזכורות קבועות עדיין.</p>`}
+        <button class="addbtn" id="rAdd" style="margin:10px 0">＋ תזכורת קבועה</button></div>`;
+      const msg = t => { const m=$("#nMsg",body); if(m) m.textContent=t; };
+      const on=$("#nOn",body); if(on) on.onclick=async()=>{ msg("מפעיל…"); try{ await enablePush(); toast("ההתראות הופעלו"); openNotifs(); }catch(e){ const m=e&&e.message||""; msg(/[\u0590-\u05FF]/.test(m)?m:"לא הצלחתי להפעיל התראות במכשיר הזה"); } };
+      const off=$("#nOff",body); if(off) off.onclick=async()=>{ await disablePush(); toast("ההתראות כובו במכשיר הזה"); openNotifs(); };
+      const tst=$("#nTest",body); if(tst) tst.onclick=async()=>{ msg("שולח…"); try{ const j=await testPush(); msg(j.sent? "נשלחה. תוך כמה שניות היא תופיע." : "אין מכשירים רשומים."); }catch(e){ msg("שגיאה בשליחה: "+(e.message||"")); } };
+      const bind=(id,fn)=>{ const el=$(id,body); if(el) el.onchange=()=>{ fn(el); save(); }; };
+      bind("#fEn",e=>r.feed.enabled=e.checked); bind("#fH",e=>{ const v=parseFloat(e.value); r.feed.hours = v>=0.5 ? v : 3; });
+      bind("#fQf",e=>r.feed.quietFrom=e.value); bind("#fQt",e=>r.feed.quietTo=e.value); bind("#tEn",e=>r.tasks.enabled=e.checked);
+      body.querySelectorAll("[data-rn]").forEach(c=>c.onchange=()=>{ const i=r.items.find(y=>y.id===c.dataset.rn); if(i){ i.enabled=c.checked; save(); } });
+      body.querySelectorAll("[data-re]").forEach(c=>c.onclick=()=>editReminder(c.dataset.re));
+      $("#rAdd",body).onclick=()=>editReminder(null);
+    };
+    draw();
+  });
+}
+function editReminder(id){
+  const r = rem(); const isNew = !id;
+  const it = isNew ? {id:uid(), title:"", time:"08:00", days:[], enabled:true} : r.items.find(y=>y.id===id); if(!it) return;
+  const days = new Set(it.days||[]);
+  openDlg(isNew?"תזכורת קבועה חדשה":"עריכת תזכורת", `
+    ${isNew?`<div class="chips" style="margin-bottom:12px">${["נטילת ידיים","ויטמין D","בדיקת חיתול","תרופה"].map(t=>`<button data-ps="${t}">${t}</button>`).join("")}</div>`:""}
+    <label class="f"><span>הודעה</span><input type="text" id="rT" value="${esc(it.title)}" placeholder="למשל: נטילת ידיים"></label>
+    <label class="f"><span>שעה</span><input type="time" id="rH" value="${esc(it.time)}"></label>
+    <div class="f"><span style="display:block;font-size:14px;color:var(--muted);margin-bottom:4px">בימים (בלי בחירה = כל יום)</span><div class="daychips">${DAYN.map((n,i)=>`<button data-dy="${i}" class="${days.has(i)?"on":""}">${n}</button>`).join("")}</div></div>
+    <div class="row" style="margin-top:14px"><button class="btn" id="rS">שמירה</button>${isNew?"":`<button class="btn ghost" id="rX" style="color:var(--danger)">מחיקה</button>`}<button class="btn ghost" id="rC">חזרה</button></div>`, body=>{
+      body.querySelectorAll("[data-ps]").forEach(b=>b.onclick=()=>{ $("#rT",body).value=b.dataset.ps; });
+      body.querySelectorAll("[data-dy]").forEach(b=>b.onclick=()=>{ const d=+b.dataset.dy; days.has(d)?days.delete(d):days.add(d); b.classList.toggle("on",days.has(d)); });
+      $("#rC",body).onclick=()=>openNotifs();
+      $("#rS",body).onclick=()=>{ const t=$("#rT",body).value.trim(); const h=$("#rH",body).value; if(!t){ $("#rT",body).focus(); return; } if(!h){ $("#rH",body).focus(); return; }
+        it.title=t; it.time=h; it.days=[...days].sort(); if(isNew) r.items.push(it); save(); openNotifs(); };
+      const x=$("#rX",body); if(x) x.onclick=async()=>{ if(await askConfirm("למחוק את התזכורת \""+it.title+"\"?","מחיקה")){ r.items=r.items.filter(y=>y.id!==it.id); save(); openNotifs(); } };
+    });
+}
+$("#openNotif").onclick = () => openNotifs();
+
 /* ---------- LOG ---------- */
 const LOGT = {
   bottle:{ic:"🍼",t:"בקבוק",feed:1},
@@ -1262,9 +1468,9 @@ function renderLog(){
 setInterval(()=>{ if(!$("#tab-log").hidden) renderLog(); }, 60000);
 
 /* ---------- boot ---------- */
-function renderAll(){ renderBaby(); renderBrit(); renderShop(); renderChecks(); renderLog(); }
+function renderAll(){ renderBaby(); renderBrit(); renderShop(); renderTasks(); renderChecks(); renderLog(); }
 renderAll();
-try{ const tab=localStorage.getItem("baby-app-tab"); if(tab){ const b=document.querySelector(`nav.tabs button[data-tab="${tab}"]`); b && b.click(); } }catch(e){}
+try{ const tab=localStorage.getItem("baby-app-tab"); if(tab && ["baby","log","checks","tasks","shop"].includes(tab)) showTab(tab); }catch(e){}
 boot();
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
 })();
