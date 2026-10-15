@@ -268,7 +268,7 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
     </div>
     <h2>מעקב גדילה</h2>
     <div id="growth"></div>
-    <button class="btn ghost" id="addGrowth" style="margin-top:10px">הוספת שקילה</button>
+    <button class="btn ghost" id="addGrowth" style="margin-top:10px">הוספת מדידה</button>
   </section>
 
   <!-- Brit -->
@@ -765,19 +765,30 @@ function renderBaby(){
     : `<div class="empty">עוד אין פרטים. לחצו על "עריכת פרטים".</div>`;
 
   const g = state.growth.slice().sort((a,b)=>a.date<b.date?1:-1);
-  $("#growth").innerHTML = g.length ? `<ul class="list">${g.map(x=>`<li><div class="body"><div class="title">${esc(x.weight)} ק״ג${x.length?`, ${esc(x.length)} ס״מ`:""}</div><div class="meta">${fmtLong(parseD(x.date))}${x.note?", "+esc(x.note):""}</div></div><button class="more" data-delg="${x.id}" aria-label="מחיקה">🗑</button></li>`).join("")}</ul>`
-    : `<div class="panel"><div class="empty">שקילה מטיפת חלב או מהרופא? אפשר לרשום כאן.</div></div>`;
-  document.querySelectorAll("[data-delg]").forEach(btn=>btn.onclick=async()=>{ if(await askConfirm("למחוק את השקילה?","מחיקה")){ state.growth=state.growth.filter(x=>x.id!==btn.dataset.delg); save(); renderBaby(); }});
+  $("#growth").innerHTML = g.length ? `<ul class="list">${g.map(x=>{ const parts=[x.weight?esc(x.weight)+" ק״ג":"", x.length?esc(x.length)+" ס״מ":"", x.head?"היקף ראש "+esc(x.head)+" ס״מ":""].filter(Boolean); return `<li data-eg="${x.id}" style="cursor:pointer"><div class="body"><div class="title">${parts.join(", ")||"מדידה"}</div><div class="meta">${fmtLong(parseD(x.date))}${x.note?", "+esc(x.note):""}</div></div><span class="more" aria-hidden="true">✎</span></li>`; }).join("")}</ul>`
+    : `<div class="panel"><div class="empty">מדידה מטיפת חלב או מהרופא? אפשר לרשום כאן.</div></div>`;
+  document.querySelectorAll("[data-eg]").forEach(li=>li.onclick=()=>openGrowth(li.dataset.eg));
 }
-$("#addGrowth").onclick = () => openDlg("הוספת שקילה", `
-  <label class="f"><span>תאריך</span><input type="date" id="gD" value="${iso(new Date())}"></label>
-  <div class="two"><label class="f"><span>משקל (ק״ג)</span><input type="number" step="0.01" inputmode="decimal" id="gW"></label>
-  <label class="f"><span>אורך (ס״מ)</span><input type="number" step="0.1" inputmode="decimal" id="gL"></label></div>
-  <label class="f"><span>הערה</span><input type="text" id="gN" placeholder="למשל: טיפת חלב"></label>
-  <button class="btn full" id="gS">שמירה</button>`, body => {
-    $("#gS",body).onclick = () => { const w=$("#gW",body).value; if(!w){ $("#gW",body).focus(); return; }
-      state.growth.push({id:uid(), date:$("#gD",body).value||iso(new Date()), weight:w, length:$("#gL",body).value, note:$("#gN",body).value}); save(); renderBaby(); closeDlg(); toast("השקילה נשמרה"); };
+function openGrowth(id){
+  const e = id ? state.growth.find(x=>x.id===id) : null; const g = e || {};
+  const v = k => esc(g[k]==null?"":g[k]);
+  openDlg(e?"עריכת מדידה":"הוספת מדידה", `
+  <label class="f"><span>תאריך</span><input type="date" id="gD" value="${esc(g.date||iso(new Date()))}"></label>
+  <div class="two"><label class="f"><span>משקל (ק״ג)</span><input type="number" step="0.01" inputmode="decimal" id="gW" value="${v("weight")}"></label>
+  <label class="f"><span>אורך (ס״מ)</span><input type="number" step="0.1" inputmode="decimal" id="gL" value="${v("length")}"></label></div>
+  <label class="f"><span>היקף ראש (ס״מ)</span><input type="number" step="0.1" inputmode="decimal" id="gH" value="${v("head")}"></label>
+  <label class="f"><span>הערה</span><input type="text" id="gN" placeholder="למשל: טיפת חלב" value="${v("note")}"></label>
+  <button class="btn full" id="gS">שמירה</button>${e?`<button class="btn ghost full" id="gDel" style="margin-top:8px;color:#C0392B">מחיקת המדידה</button>`:""}`, body => {
+    $("#gS",body).onclick = () => {
+      const w=$("#gW",body).value, l=$("#gL",body).value, h=$("#gH",body).value;
+      if(!w && !l && !h){ $("#gW",body).focus(); return; }
+      const d = {date:$("#gD",body).value||iso(new Date()), weight:w, length:l, head:h, note:$("#gN",body).value};
+      if(e) Object.assign(e,d); else state.growth.push(Object.assign({id:uid()},d));
+      save(); renderBaby(); closeDlg(); toast("המדידה נשמרה"); };
+    const del=$("#gDel",body); if(del) del.onclick=async()=>{ if(await askConfirm("למחוק את המדידה?","מחיקה")){ state.growth=state.growth.filter(x=>x.id!==e.id); save(); renderBaby(); closeDlg(); } };
   });
+}
+$("#addGrowth").onclick = () => openGrowth();
 
 $("#editBaby").onclick = () => {
   const b = state.baby;
@@ -1493,13 +1504,17 @@ function renderLog(){
   const feeds = todays.filter(x=>LOGT[x.type]?.feed).length, diapers = todays.filter(x=>LOGT[x.type]?.diaper).length;
   $("#since").innerHTML = `<div><span class="small muted">האכלה אחרונה</span><b>${lastFeed? ago(lastFeed.t):"—"}</b>${lastFeed?`<span class="small muted">${LOGT[lastFeed.type].t}</span>`:""}</div>
     <div><span class="small muted">היום</span><b>${feeds} 🍼 ${diapers} 🧷</b><span class="small muted">האכלות וחיתולים</span></div>`;
-  const recent = L.filter(x=>x.t >= start - 86400000);
+  const recent = L.filter(x=>x.t >= start - 6*86400000);
   if(!recent.length){ $("#todayTitle").textContent="היום"; $("#logBody").innerHTML=`<div class="panel"><div class="empty">לחיצה על כפתור למעלה רושמת עם השעה הנוכחית.</div></div>`; return; }
-  $("#todayTitle").textContent = "היום ואתמול";
-  $("#logBody").innerHTML = `<ul class="list loglist">${recent.map(x=>{ const dt=new Date(x.t), y = x.t<start;
-    return `<li><span class="time">${dt.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}</span>
-    <div class="body"><div class="title">${LOGT[x.type]?.ic||""} ${LOGT[x.type]?.t||""}${x.note?", "+esc(x.note):""}</div>${y?`<div class="meta">אתמול</div>`:""}</div>
-    <button class="more" data-dl="${x.id}" aria-label="מחיקה">🗑</button></li>`; }).join("")}</ul>`;
+  $("#todayTitle").textContent = "7 ימים אחרונים";
+  const dayLbl = t => { const n=Math.round((start-(+new Date(new Date(t).setHours(0,0,0,0))))/86400000); return n===0?"היום":n===1?"אתמול":new Date(t).toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"numeric"}); };
+  let html="", last="";
+  recent.forEach(x=>{ const dl=dayLbl(x.t), dt=new Date(x.t);
+    if(dl!==last){ html+=(last?`</ul>`:"")+`<h3 style="margin:16px 0 6px;font-size:15px;color:var(--muted)">${dl}</h3><ul class="list loglist">`; last=dl; }
+    html+=`<li><span class="time">${dt.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}</span>
+    <div class="body"><div class="title">${LOGT[x.type]?.ic||""} ${LOGT[x.type]?.t||""}${x.note?", "+esc(x.note):""}</div></div>
+    <button class="more" data-dl="${x.id}" aria-label="מחיקה">🗑</button></li>`; });
+  $("#logBody").innerHTML = html+"</ul>";
   document.querySelectorAll("[data-dl]").forEach(b=>b.onclick=async()=>{
     const x=state.log.find(y=>y.id===b.dataset.dl); if(!x) return;
     const when=new Date(x.t).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"});
