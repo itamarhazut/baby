@@ -246,6 +246,9 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .err{color:var(--danger);min-height:1.4em;font-size:15px;margin:4px 0 10px}
 .code{font-size:26px;font-weight:700;letter-spacing:.12em;direction:ltr;text-align:center;background:var(--sky);border-radius:14px;padding:12px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+.addqty{display:flex;align-items:center;gap:10px;margin:8px 2px 2px;font-size:15px;color:var(--muted)}
+.addqty b{min-width:26px;text-align:center;font-size:19px;color:var(--ink)}
+.addqty select{margin-inline-start:auto;width:auto;flex:none;min-width:96px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;padding:6px 8px}
 </style>
 </head>
 <body>
@@ -295,6 +298,7 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
     <div class="shophead"><button class="backbtn" id="shopBack" aria-label="חזרה">→</button><h2 style="margin:0;flex:1">קניות</h2><button class="btn gold" id="shopMode">🛒 התחלת קנייה</button></div>
     <div id="shopNormal">
       <div class="addrow"><input type="text" id="shopIn" placeholder="מה צריך לקנות? אפשר גם: 2 חלב" enterkeyhint="done" autocomplete="off"><button class="btn" id="shopAdd">הוספה</button></div>
+      <div class="addqty"><span>כמות</span><button class="qb" id="aqM" type="button" aria-label="פחות">−</button><b id="aqV">1</b><button class="qb" id="aqP" type="button" aria-label="עוד">+</button><select id="aqU" aria-label="יחידה"></select></div>
       <div id="shopAc" class="chips ac"></div>
       <div id="shopSug"></div>
       <details id="shopQuick" class="qk"><summary>⚡ הוספה מהירה</summary><div id="shopChips"></div></details>
@@ -1249,10 +1253,18 @@ function addShopItem(title, dept, qty, unit){
   else state.shop.push({id:uid(), title, done:false, dept:d, qty, unit, note:""});
   save(); renderShop(); toast("נוסף ל"+deptName(d));
 }
+const aq = {n:1};
+function aqDraw(){ $("#aqV").textContent=aq.n; $("#aqM").disabled = aq.n<=1; }
+function aqReset(){ aq.n=1; $("#aqU").value=""; aqDraw(); }
+$("#aqU").innerHTML = UNITS.map(u=>`<option value="${u}">${u||"יחידות"}</option>`).join("");
+$("#aqM").onclick=()=>{ if(aq.n>1){ aq.n--; aqDraw(); } };
+$("#aqP").onclick=()=>{ aq.n++; aqDraw(); };
+aqDraw();
 function addShop(){
   const inp=$("#shopIn"), v=inp.value.trim(); if(!v){ inp.focus(); return; }
   const p = parseQty(v);
-  inp.value=""; renderAc(); addShopItem(p.title, null, p.qty, p.unit); inp.focus();
+  const q = p.qty>1 ? p.qty : aq.n, u = p.unit || $("#aqU").value;
+  inp.value=""; renderAc(); addShopItem(p.title, null, q, u); aqReset(); inp.focus();
 }
 function renderAc(){
   const q = $("#shopIn").value.trim(), box = $("#shopAc");
@@ -1261,7 +1273,7 @@ function renderAc(){
   const all = knownProducts().filter(x=>x!==t && x.includes(t));
   all.sort((a,b)=>(b.startsWith(t)-a.startsWith(t)) || ((state.shopHist?.[b]?.n||0)-(state.shopHist?.[a]?.n||0)) || a.length-b.length);
   box.innerHTML = all.slice(0,6).map(x=>`<button data-ac="${esc(x)}">${esc(x)}</button>`).join("");
-  box.querySelectorAll("[data-ac]").forEach(b=>b.onclick=()=>{ const p=parseQty(q); $("#shopIn").value=""; renderAc(); addShopItem(b.dataset.ac, null, p.qty, p.unit); $("#shopIn").focus(); });
+  box.querySelectorAll("[data-ac]").forEach(b=>b.onclick=()=>{ const p=parseQty(q); $("#shopIn").value=""; renderAc(); addShopItem(b.dataset.ac, null, p.qty>1?p.qty:aq.n, p.unit||$("#aqU").value); aqReset(); $("#shopIn").focus(); });
 }
 function editShop(id){
   const x = state.shop.find(y=>y.id===id); if(!x) return;
