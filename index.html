@@ -178,6 +178,15 @@ dialog .db{padding:14px 18px 18px}
 .nbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin-bottom:12px}
 .nbox h3{margin:10px 0 4px}
 .okmsg{color:var(--done);font-weight:600}
+.shopcard.bepcard{margin-top:12px;background:linear-gradient(135deg,#D9628E,#B2418F)}
+.bepsq{display:flex;gap:6px;flex:none}
+.bsq{width:38px;text-align:center}
+.bsq i{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;border:2px dashed rgba(255,255,255,.55);font-style:normal;font-weight:800;font-size:19px;background:rgba(255,255,255,.08)}
+.bsq i.full{background:#fff;color:#B2418F;border:2px solid #fff}
+.bsq i.today{border:2px solid #fff}
+.bsq span{display:block;font-size:12px;margin-top:3px;opacity:.95}
+.bday{font-weight:700;margin:14px 0 4px}
+.btime{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
 .shopcard{display:flex;align-items:center;gap:14px;width:100%;text-align:start;background:linear-gradient(135deg,#2F8F4E,#2E78C7);color:#fff;border:0;border-radius:18px;padding:16px 18px;box-shadow:0 6px 16px rgba(0,0,0,.15)}
 .shopcard .ic{font-size:34px;line-height:1}
 .shopcard .tx{flex:1}.shopcard b{display:block;font-size:20px;font-family:var(--serif)}
@@ -275,6 +284,7 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
   <section id="tab-tasks" role="tabpanel" hidden>
     <div class="shophead" style="margin-bottom:12px"><h2 style="margin:6px 0 0;flex:1">משימות</h2><button class="btn ghost" id="openNotif" style="padding:9px 14px;font-size:15px">🔔 התראות</button></div>
     <button class="shopcard" id="openShop"><span class="ic">🛒</span><span class="tx"><b>קניות</b><small id="shopCardSub"></small></span><span class="ar">←</span></button>
+    <button class="shopcard bepcard" id="openBep"><span class="ic">🧴</span><span class="tx"><b>בפנטן</b><small id="bepSub"></small></span><span class="bepsq" id="bepSq"></span></button>
     <h3>מה צריך לעשות</h3>
     <div class="addrow" style="margin-top:0"><input type="text" id="taskIn" placeholder="משימה חדשה" enterkeyhint="done" autocomplete="off"><button class="btn" id="taskAdd">הוספה</button></div>
     <div id="taskBody"></div>
@@ -1286,9 +1296,38 @@ $("#shopIn").addEventListener("input", renderAc);
 $("#shopIn").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addShop(); } });
 $("#shopMode").onclick = () => { shopMode=!shopMode; shopCur=""; renderShop(); window.scrollTo(0,0); };
 
+/* ---------- בפנטן ---------- */
+const BEP_DAYS = [2,3,4,5]; // שלישי עד שישי
+function bepEntries(){ return (state.log||[]).filter(x=>x.type==="bepanthen").sort((a,b)=>a.t-b.t); }
+function renderBep(){
+  const sq = $("#bepSq"); if(!sq) return;
+  const now = new Date(), t0 = today0(), wk = addDays(t0, -t0.getDay()), E = bepEntries();
+  let any = 0;
+  sq.innerHTML = BEP_DAYS.map(d=>{
+    const day = addDays(wk, d), a = +day, b = +addDays(day,1);
+    const n = E.filter(x=>x.t>=a && x.t<b).length; if(n) any++;
+    const isToday = +day === +t0;
+    return `<div class="bsq"><i class="${n?"full":""} ${isToday?"today":""}">${n? (n>1?n:"✓") : ""}</i><span>${DAYN[d]}׳</span></div>`;
+  }).join("");
+  const last = E[E.length-1];
+  $("#bepSub").textContent = last ? "אחרון: "+new Date(last.t).toLocaleDateString("he-IL",{weekday:"short"})+" "+new Date(last.t).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}) : "עוד לא תועד";
+}
+function openBep(){
+  const E = bepEntries().reverse();
+  const byDay = new Map();
+  E.forEach(x=>{ const k = iso(new Date(x.t)); if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(x); });
+  const html = (E.length ? [...byDay.entries()].slice(0,40).map(([k,arr])=>`<div class="bday">${esc(fmtShort(parseD(k)))} · ${arr.length} פעמים</div>${arr.map(x=>`<div class="btime"><span>${esc(new Date(x.t).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}))}</span><span class="muted small">${esc(ago(x.t))}</span></div>`).join("")}`).join("")
+    : `<p class="note" style="margin-top:0">עוד לא תועד בפנטן. הוא מסומן ביומן, או בכפתור שלמטה.</p>`)
+    + `<button class="btn full" id="bepNow" style="margin-top:16px">＋ רישום בפנטן עכשיו</button>`;
+  openDlg("בפנטן: הזמנים שתועדו", html, body=>{
+    $("#bepNow",body).onclick=()=>{ state.log.push({id:uid(), t:Date.now(), type:"bepanthen", note:""}); save(); renderLog(); renderBep(); closeDlg(); toast("בפנטן נרשם"); };
+  });
+}
+
 /* ---------- TASKS ---------- */
 function renderTasks(){
   if(!Array.isArray(state.tasks)) state.tasks=[];
+  renderBep();
   const openShop = (state.shop||[]).filter(x=>!x.done).length;
   $("#shopCardSub").textContent = openShop ? openShop+" פריטים לקנות" : "הרשימה ריקה";
   const L = state.tasks.slice().sort((a,b)=>(a.done-b.done));
@@ -1327,6 +1366,7 @@ function editTask2(id){
 $("#taskAdd").onclick = addTask;
 $("#taskIn").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addTask(); } });
 $("#openShop").onclick = () => showTab("shop");
+$("#openBep").onclick = openBep;
 $("#shopBack").onclick = () => { shopMode=false; renderShop(); showTab("tasks"); };
 
 /* ---------- NOTIFICATIONS ---------- */
@@ -1445,6 +1485,7 @@ document.querySelectorAll("[data-lg]").forEach(b=>b.onclick=()=>{
 });
 function ago(ms){ const m=Math.floor((Date.now()-ms)/60000); if(m<1) return "עכשיו"; if(m<60) return "לפני "+m+" דק׳"; const h=Math.floor(m/60), r=m%60; return "לפני "+h+" ש׳"+(r?" ו־"+r+" דק׳":""); }
 function renderLog(){
+  try{ renderBep(); }catch(e){}
   const L = state.log.slice().sort((a,b)=>b.t-a.t);
   const lastFeed = L.find(x=>LOGT[x.type] && LOGT[x.type].feed);
   const start = +today0();
