@@ -178,10 +178,12 @@ dialog .db{padding:14px 18px 18px}
 .nbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin-bottom:12px}
 .nbox h3{margin:10px 0 4px}
 .okmsg{color:var(--done);font-weight:600}
+.shopcard.pidcard{margin-top:12px;background:linear-gradient(135deg,#C99A1B,#9A6E0E)}
 .shopcard.bepcard{margin-top:12px;background:linear-gradient(135deg,#D9628E,#B2418F)}
-.bepsq{display:flex;gap:6px;flex:none}
-.bsq{width:38px;text-align:center}
-.bsq i{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;border:2px dashed rgba(255,255,255,.55);font-style:normal;font-weight:800;font-size:19px;background:rgba(255,255,255,.08)}
+.shopcard.bepcard{flex-wrap:wrap}
+.bepsq{display:flex;gap:4px;flex:1 1 100%;justify-content:space-between;margin-top:10px}
+.bsq{width:29px;text-align:center}
+.bsq i{display:grid;place-items:center;width:29px;height:29px;border-radius:8px;border:2px dashed rgba(255,255,255,.55);font-style:normal;font-weight:800;font-size:19px;background:rgba(255,255,255,.08)}
 .bsq i.full{background:#fff;color:#B2418F;border:2px solid #fff}
 .bsq i.today{border:2px solid #fff}
 .bsq span{display:block;font-size:12px;margin-top:3px;opacity:.95}
@@ -338,11 +340,20 @@ body.drag-active{user-select:none;-webkit-user-select:none;cursor:grabbing}
     <button class="fab" id="editFab" aria-pressed="false">✎ עריכה</button>
   </section>
 
+  <!-- Pidyon -->
+  <section id="tab-pidyon" role="tabpanel" hidden>
+    <button class="btn ghost" id="pdBack" style="margin-bottom:8px">→ חזרה</button>
+    <div id="pdHead"></div>
+    <div id="pdLists"></div>
+    <p class="note" id="pdNote">הקשה על "מי?" מחליפה בין אני, אשתי, או אף אחד. הקשה על ⋯ לעריכה או הערה.</p>
+  </section>
+
   <!-- Tasks hub -->
   <section id="tab-tasks" role="tabpanel" hidden>
     <div class="shophead" style="margin-bottom:12px"><h2 style="margin:6px 0 0;flex:1">משימות</h2><button class="btn ghost" id="openNotif" style="padding:9px 14px;font-size:15px">🔔 התראות</button></div>
     <button class="shopcard" id="openShop"><span class="ic">🛒</span><span class="tx"><b>קניות</b><small id="shopCardSub"></small></span><span class="ar">←</span></button>
-    <button class="shopcard bepcard" id="openBep"><span class="ic">🧴</span><span class="tx"><b>בפנטן</b><small id="bepSub"></small></span><span class="bepsq" id="bepSq"></span></button>
+    <button class="shopcard pidcard" id="openPidyon"><span class="ic">🪙</span><span class="tx"><b>פדיון הבן</b><small id="pdSub"></small></span><span class="ar">←</span></button>
+    <button class="shopcard bepcard" id="openBep"><span class="ic">☀️</span><span class="tx"><b>ויטמין D</b><small id="bepSub"></small></span><span class="bepsq" id="bepSq"></span></button>
     <h3>מה צריך לעשות</h3>
     <div class="addrow" style="margin-top:0"><input type="text" id="taskIn" placeholder="משימה חדשה" enterkeyhint="done" autocomplete="off"><button class="btn" id="taskAdd">הוספה</button></div>
     <div id="taskBody"></div>
@@ -432,6 +443,22 @@ const BRIT_DEFAULT = [
   ["אחרי הברית","לבדוק שמענק הלידה התקבל (ביטוח לאומי)"]
 ].map(([group,title]) => ({id:uid(), group, title, who:"", done:false, note:""}));
 
+const PIDYON_DEFAULT = [
+  ["לפני שמתחילים","לוודא עם רב שהתינוק חייב בפדיון (בכור לאמו, לידה רגילה, ההורים לא כהנים/לויים)"],
+  ["לפני שמתחילים","לבדוק אם יום ה-31 חל בשבת או חג ולהתייעץ עם הרב על מועד"],
+  ["לפני שמתחילים","לתאם כהן"],
+  ["הטקס","חמישה מטבעות כסף לפדיון (לברר איפה משיגים)"],
+  ["הטקס","כוס יין וברכות"],
+  ["הטקס","להחליט מי מביא את התינוק ומי עושה את הברכות"],
+  ["הטקס","להכין תכשיטים לתינוק לפי המנהג"],
+  ["מקום וכיבוד","לסגור מקום (בית, בית כנסת, אולם)"],
+  ["מקום וכיבוד","סעודת מצווה: קייטרינג או כיבוד"],
+  ["מקום וכיבוד","שתייה וכלים חד פעמיים"],
+  ["מקום וכיבוד","צלם"],
+  ["הזמנות","רשימת מוזמנים"],["הזמנות","לשלוח הזמנה בוואטסאפ"],["הזמנות","להודיע לכהן ולרב"],
+  ["לתינוק ולאמא","בגד לתינוק"],["לתינוק ולאמא","תיק החתלה מוכן"]
+].map(([group,title]) => ({id:uid(), group, title, who:"", done:false, note:""}));
+
 const CHECKS_DEFAULT = [
   ["baby","חיסון צהבת B (מנה 1) וויטמין K",0,"בבית החולים"],
   ["baby","בדיקת סקר ילודים (דקירה בעקב)",1,"בבית החולים"],
@@ -450,7 +477,7 @@ function defaults(){
   return {
     baby:{name:"",hebName:"",idNum:"",birthDate:"",birthTime:"",afterSunset:false,britOverride:"",weight:"",length:"",head:"",blood:"",
       hospital:"",hmo:"",pediatrician:"",pediatricianPhone:"",tipat:"",tipatPhone:"",father:"",mother:"",notes:""},
-    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], shop:[], tasks:[], reminders:{tz:"Asia/Jerusalem",items:[],feed:{enabled:true,hours:3,quietFrom:"",quietTo:""},tasks:{enabled:true}}, shopDepts:null, shopMap:{}, shopHist:{}, shopTrips:[], log:[], updatedAt:0
+    brit: BRIT_DEFAULT, groups:null, afterGroup:"אחרי הברית", checks: CHECKS_DEFAULT, growth:[], shop:[], tasks:[], reminders:{tz:"Asia/Jerusalem",items:[],feed:{enabled:true,hours:3,quietFrom:"",quietTo:""},tasks:{enabled:true}}, shopDepts:null, shopMap:{}, shopHist:{}, shopTrips:[], pidyon:{tasks:PIDYON_DEFAULT, override:""}, log:[], updatedAt:0
   };
 }
 
@@ -483,6 +510,8 @@ const SECTIONS = {
            set:d=>{ if(Array.isArray(d.checks)) state.checks=d.checks; }},
   shop:   {get:()=>({shop:state.shop, depts:state.shopDepts||null, map:state.shopMap||{}, hist:state.shopHist||{}}),
            set:d=>{ state.shop = Array.isArray(d.shop)?d.shop:[]; state.shopDepts = Array.isArray(d.depts)?d.depts:null; state.shopMap = (d.map && typeof d.map==="object")?d.map:{}; state.shopHist = (d.hist && typeof d.hist==="object")?d.hist:{}; }},
+  pidyon: {get:()=>({tasks:(state.pidyon&&state.pidyon.tasks)||[], override:(state.pidyon&&state.pidyon.override)||""}),
+           set:d=>{ state.pidyon = {tasks:Array.isArray(d.tasks)?d.tasks:[], override:d.override||""}; }},
   trips:  {get:()=>({trips:state.shopTrips||[]}),
            set:d=>{ state.shopTrips = Array.isArray(d.trips)?d.trips:[]; }},
   tasks:  {get:()=>({tasks:state.tasks||[]}),
@@ -758,7 +787,7 @@ function askConfirm(msg, okText){
   });
 }
 /* ---------- tabs ---------- */
-const IMRI_TABS = ["baby","log","checks"], TASK_TABS = ["tasks","shop"];
+const IMRI_TABS = ["baby","log","checks"], TASK_TABS = ["tasks","shop","pidyon"];
 let curTab = "baby";
 function showTab(name){
   curTab = name;
@@ -1792,7 +1821,7 @@ $("#shopMode").onclick = () => {
 $("#shopStats").onclick = openShopStats;
 
 /* ---------- בפנטן ---------- */
-const BEP_DAYS = [2,3,4,5]; // שלישי עד שישי
+const BEP_DAYS = [0,1,2,3,4,5,6]; // ויטמין D: כל יום
 function bepEntries(){ return (state.log||[]).filter(x=>x.type==="bepanthen").sort((a,b)=>a.t-b.t); }
 function renderBep(){
   const sq = $("#bepSq"); if(!sq) return;
@@ -1802,7 +1831,7 @@ function renderBep(){
     const day = addDays(wk, d), a = +day, b = +addDays(day,1);
     const n = E.filter(x=>x.t>=a && x.t<b).length; if(n) any++;
     const isToday = +day === +t0;
-    return `<div class="bsq"><i class="${n?"full":""} ${isToday?"today":""}">${n? (n>1?n:"✓") : ""}</i><span>${DAYN[d]}׳</span></div>`;
+    return `<div class="bsq"><i class="${n?"full":""} ${isToday?"today":""}">${n? (n>1?n:"✓") : ""}</i><span>${DAYN[d]}</span></div>`;
   }).join("");
   const last = E[E.length-1];
   $("#bepSub").textContent = last ? "אחרון: "+new Date(last.t).toLocaleDateString("he-IL",{weekday:"short"})+" "+new Date(last.t).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}) : "עוד לא תועד";
@@ -1812,17 +1841,94 @@ function openBep(){
   const byDay = new Map();
   E.forEach(x=>{ const k = iso(new Date(x.t)); if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(x); });
   const html = (E.length ? [...byDay.entries()].slice(0,40).map(([k,arr])=>`<div class="bday">${esc(fmtShort(parseD(k)))} · ${arr.length} פעמים</div>${arr.map(x=>`<div class="btime"><span>${esc(new Date(x.t).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}))}</span><span class="muted small">${esc(ago(x.t))}</span></div>`).join("")}`).join("")
-    : `<p class="note" style="margin-top:0">עוד לא תועד בפנטן. הוא מסומן ביומן, או בכפתור שלמטה.</p>`)
-    + `<button class="btn full" id="bepNow" style="margin-top:16px">＋ רישום בפנטן עכשיו</button>`;
-  openDlg("בפנטן: הזמנים שתועדו", html, body=>{
-    $("#bepNow",body).onclick=()=>{ state.log.push({id:uid(), t:Date.now(), type:"bepanthen", note:""}); save(); renderLog(); renderBep(); closeDlg(); toast("בפנטן נרשם"); };
+    : `<p class="note" style="margin-top:0">עוד לא תועד ויטמין D. הוא מסומן ביומן, או בכפתור שלמטה.</p>`)
+    + `<button class="btn full" id="bepNow" style="margin-top:16px">＋ רישום ויטמין D עכשיו</button>`;
+  openDlg("ויטמין D: הזמנים שתועדו", html, body=>{
+    $("#bepNow",body).onclick=()=>{ state.log.push({id:uid(), t:Date.now(), type:"bepanthen", note:""}); save(); renderLog(); renderBep(); closeDlg(); toast("ויטמין D נרשם"); };
   });
 }
+
+/* ---------- פדיון הבן ---------- */
+function pidyonDate(){
+  const b = state.baby, o = state.pidyon && state.pidyon.override;
+  if (o) return parseD(o);
+  const bd = parseD(b.birthDate); if(!bd) return null;
+  return addDays(bd, 30 + (b.afterSunset ? 1 : 0));
+}
+function pidGroups(){ const g=[]; (state.pidyon.tasks||[]).forEach(x=>{ const n=x.group||"עוד"; if(!g.includes(n)) g.push(n); }); return g; }
+function renderPidyon(){
+  if (!state.pidyon || !Array.isArray(state.pidyon.tasks)) state.pidyon = {tasks:[], override:""};
+  const t = state.pidyon.tasks, done = t.filter(x=>x.done).length, pd = pidyonDate();
+  let when = "", warn = "";
+  if (pd){
+    const d = diffDays(pd, today0()), wd = pd.toLocaleDateString("he-IL",{weekday:"long"});
+    when = d>1 ? `בעוד ${d} ימים` : d===1 ? "מחר" : d===0 ? "היום! מזל טוב 🎉" : "התקיים";
+    when += `, ${fmtShort(pd)}, ${hebDate(pd)}`;
+    if (pd.getDay()===6) warn = "היום הזה חל בשבת. בדרך כלל לא מקיימים פדיון בשבת או בחג, כדאי לברר עם הרב.";
+  }
+  $("#pdHead").innerHTML = `<h2 style="margin-top:6px">פדיון הבן</h2>
+    ${when?`<div class="muted" style="margin-bottom:6px">${esc(when)}${state.pidyon.override?" (נקבע ידנית)":""}</div>`:`<div class="muted small" style="margin-bottom:8px">הוסיפו תאריך לידה בכרטיס התינוק כדי לחשב את יום הפדיון (היום ה-31).</div>`}
+    ${warn?`<div class="note" style="margin:0 0 8px;color:var(--danger)">${esc(warn)}</div>`:""}
+    <div class="progress"><div class="bar"><i style="width:${t.length?Math.round(done/t.length*100):0}%"></i></div><span class="small muted">${done} מתוך ${t.length}</span></div>
+    <div class="row" style="margin-top:10px"><button class="btn ghost" id="pdDate">📅 שינוי תאריך</button></div>
+    <p class="note" style="margin-bottom:0">פדיון הבן חל רק על בכור לאמו, שנולד בלידה רגילה, כשהאב והאם אינם כהנים או לויים. כדאי לאשר מול רב.</p>`;
+  $("#pdDate").onclick = ()=>{
+    const cur = state.pidyon.override || (pd ? iso(pd) : "");
+    openDlg("תאריך הפדיון", `<label class="f"><span>תאריך</span><input type="date" id="pdD" value="${esc(cur)}"></label>
+      <div class="row"><button class="btn" id="pdS">שמירה</button><button class="btn ghost" id="pdR">חזרה לחישוב אוטומטי</button></div>`, body=>{
+        $("#pdS",body).onclick=()=>{ state.pidyon.override=$("#pdD",body).value||""; save(); renderPidyon(); closeDlg(); };
+        $("#pdR",body).onclick=()=>{ state.pidyon.override=""; save(); renderPidyon(); closeDlg(); };
+      });
+  };
+  $("#pdLists").innerHTML = pidGroups().map(g=>{
+    const items = t.filter(x=>(x.group||"עוד")===g);
+    return `<div class="ghead"><h3>${esc(g)}</h3></div><ul class="list">${items.map(x=>`
+      <li class="${x.done?"done":""}"><input type="checkbox" class="chk" data-pc="${x.id}" ${x.done?"checked":""} aria-label="${esc(x.title)}">
+      <div class="body"><div class="title">${esc(x.title)}</div>${x.note?`<div class="meta">${esc(x.note)}</div>`:""}</div>
+      <button class="chip ${x.who}" data-pw="${x.id}">${WHO_TXT[x.who||""]}</button>
+      <button class="more" data-pe="${x.id}" aria-label="עריכה">⋯</button></li>`).join("")}</ul><button class="addbtn" data-pa="${esc(g)}">＋ הוספת משימה</button>`;
+  }).join("") + `<button class="btn ghost full" id="pdNewG" style="margin-top:16px">＋ קבוצה חדשה</button>`;
+  document.querySelectorAll("[data-pc]").forEach(c=>c.onchange=()=>{ const x=t.find(y=>y.id===c.dataset.pc); x.done=c.checked; save(); renderPidyon(); });
+  document.querySelectorAll("[data-pw]").forEach(c=>c.onclick=()=>{ const x=t.find(y=>y.id===c.dataset.pw); x.who=WHO[(WHO.indexOf(x.who||"")+1)%3]; save(); renderPidyon(); });
+  document.querySelectorAll("[data-pe]").forEach(c=>c.onclick=()=>editPidTask(c.dataset.pe));
+  document.querySelectorAll("[data-pa]").forEach(c=>c.onclick=()=>addPidTask(c.dataset.pa));
+  $("#pdNewG").onclick=()=>addPidTask("");
+  renderTasks();
+}
+function addPidTask(g){
+  openDlg(g?"משימה חדשה ב"+g:"קבוצה חדשה", `
+    ${g?"":`<label class="f"><span>שם הקבוצה</span><input type="text" id="pnG" placeholder="למשל: אחרי הפדיון"></label>`}
+    <label class="f"><span>משימה</span><input type="text" id="pnT" placeholder="מה צריך לעשות?"></label>
+    <label class="f"><span>הערה (אופציונלי)</span><textarea id="pnN"></textarea></label>
+    <button class="btn full" id="pnS">הוספה</button>`, body=>{
+      const inp=$(g?"#pnT":"#pnG",body); setTimeout(()=>inp.focus(),50);
+      $("#pnS",body).onclick=()=>{
+        const grp = g || ($("#pnG",body).value.trim()||"עוד"), v=$("#pnT",body).value.trim(); if(!v){ $("#pnT",body).focus(); return; }
+        state.pidyon.tasks.push({id:uid(),group:grp,title:v,who:"",done:false,note:$("#pnN",body).value.trim()});
+        save(); renderPidyon(); closeDlg(); toast("המשימה נוספה");
+      };
+    });
+}
+function editPidTask(id){
+  const x = state.pidyon.tasks.find(y=>y.id===id); if(!x) return;
+  openDlg("עריכת משימה", `
+    <label class="f"><span>משימה</span><input type="text" id="peT" value="${esc(x.title)}"></label>
+    <label class="f"><span>קבוצה</span><select id="peG">${pidGroups().map(g=>`<option ${g===x.group?"selected":""}>${esc(g)}</option>`).join("")}</select></label>
+    <label class="f"><span>הערה (טלפון, מחיר, פרטים)</span><textarea id="peN">${esc(x.note||"")}</textarea></label>
+    <div class="row"><button class="btn" id="peS">שמירה</button><button class="btn ghost" id="peD" style="color:var(--danger)">מחיקה</button></div>`, body=>{
+      $("#peS",body).onclick=()=>{ x.title=$("#peT",body).value.trim()||x.title; x.group=$("#peG",body).value; x.note=$("#peN",body).value.trim(); save(); renderPidyon(); closeDlg(); };
+      $("#peD",body).onclick=async()=>{ if(await askConfirm("למחוק את המשימה?","מחיקה")){ state.pidyon.tasks=state.pidyon.tasks.filter(y=>y.id!==id); save(); renderPidyon(); closeDlg(); } };
+    });
+}
+$("#pdBack").onclick = () => showTab("tasks");
+$("#openPidyon").onclick = () => { renderPidyon(); showTab("pidyon"); };
 
 /* ---------- TASKS ---------- */
 function renderTasks(){
   if(!Array.isArray(state.tasks)) state.tasks=[];
   renderBep();
+  try{ const pd=pidyonDate(), tk=(state.pidyon&&state.pidyon.tasks)||[], dn=tk.filter(x=>x.done).length;
+    $("#pdSub").textContent = pd ? (()=>{ const d=diffDays(pd,today0()); return (d>1?"בעוד "+d+" ימים":d===1?"מחר":d===0?"היום!":"התקיים")+" · "+dn+"/"+tk.length+" משימות"; })() : "הוסיפו תאריך לידה"; }catch(e){}
   const openShop = (state.shop||[]).filter(x=>!x.done).length;
   $("#shopCardSub").textContent = openShop ? openShop+" פריטים לקנות" : "הרשימה ריקה";
   const L = state.tasks.slice().sort((a,b)=>(a.done-b.done));
@@ -1962,7 +2068,7 @@ $("#openNotif").onclick = () => openNotifs();
 const LOGT = {
   bottle:{ic:"🍼",t:"בקבוק",feed:1},
   wet:{ic:"💧",t:"חיתול רטוב",diaper:1}, dirty:{ic:"💩",t:"חיתול מלוכלך",diaper:1}, sleep:{ic:"😴",t:"נרדם"},
-  novimol:{ic:"💊",t:"נובימול"}, bepanthen:{ic:"🧴",t:"בפנטן"},
+  novimol:{ic:"🛁",t:"מקלחת"}, bepanthen:{ic:"☀️",t:"ויטמין D"},
   right:{ic:"🤱",t:"הנקה ימין",feed:1,old:1}, left:{ic:"🤱",t:"הנקה שמאל",feed:1,old:1}
 };
 $("#quick").innerHTML = Object.entries(LOGT).filter(([k,v])=>!v.old).map(([k,v])=>`<button data-lg="${k}"><span class="ic">${v.ic}</span>${v.t}</button>`).join("");
@@ -2008,7 +2114,7 @@ function renderLog(){
 setInterval(()=>{ if(!$("#tab-log").hidden) renderLog(); }, 60000);
 
 /* ---------- boot ---------- */
-function renderAll(){ renderBaby(); renderBrit(); renderShop(); renderTasks(); renderChecks(); renderLog(); }
+function renderAll(){ renderBaby(); renderBrit(); renderPidyon(); renderShop(); renderTasks(); renderChecks(); renderLog(); }
 renderAll();
 try{ const tab=localStorage.getItem("baby-app-tab"); if(tab && ["baby","log","checks","tasks","shop"].includes(tab)) showTab(tab); }catch(e){}
 boot();
