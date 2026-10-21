@@ -1822,7 +1822,7 @@ $("#shopStats").onclick = openShopStats;
 
 /* ---------- בפנטן ---------- */
 const BEP_DAYS = [0,1,2,3,4,5,6]; // ויטמין D: כל יום
-function bepEntries(){ return (state.log||[]).filter(x=>x.type==="bepanthen").sort((a,b)=>a.t-b.t); }
+function bepEntries(){ return (state.log||[]).filter(x=>x.type==="vitd").sort((a,b)=>a.t-b.t); }
 function renderBep(){
   const sq = $("#bepSq"); if(!sq) return;
   const now = new Date(), t0 = today0(), wk = addDays(t0, -t0.getDay()), E = bepEntries();
@@ -1844,7 +1844,7 @@ function openBep(){
     : `<p class="note" style="margin-top:0">עוד לא תועד ויטמין D. הוא מסומן ביומן, או בכפתור שלמטה.</p>`)
     + `<button class="btn full" id="bepNow" style="margin-top:16px">＋ רישום ויטמין D עכשיו</button>`;
   openDlg("ויטמין D: הזמנים שתועדו", html, body=>{
-    $("#bepNow",body).onclick=()=>{ state.log.push({id:uid(), t:Date.now(), type:"bepanthen", note:""}); save(); renderLog(); renderBep(); closeDlg(); toast("ויטמין D נרשם"); };
+    $("#bepNow",body).onclick=()=>{ state.log.push({id:uid(), t:Date.now(), type:"vitd", note:""}); save(); renderLog(); renderBep(); closeDlg(); toast("ויטמין D נרשם"); };
   });
 }
 
@@ -2068,7 +2068,8 @@ $("#openNotif").onclick = () => openNotifs();
 const LOGT = {
   bottle:{ic:"🍼",t:"בקבוק",feed:1},
   wet:{ic:"💧",t:"חיתול רטוב",diaper:1}, dirty:{ic:"💩",t:"חיתול מלוכלך",diaper:1}, sleep:{ic:"😴",t:"נרדם"},
-  novimol:{ic:"🛁",t:"מקלחת"}, bepanthen:{ic:"☀️",t:"ויטמין D"},
+  shower:{ic:"🛁",t:"מקלחת"}, vitd:{ic:"☀️",t:"ויטמין D"},
+  novimol:{ic:"💊",t:"נובימול",old:1}, bepanthen:{ic:"🧴",t:"בפנטן",old:1},
   right:{ic:"🤱",t:"הנקה ימין",feed:1,old:1}, left:{ic:"🤱",t:"הנקה שמאל",feed:1,old:1}
 };
 $("#quick").innerHTML = Object.entries(LOGT).filter(([k,v])=>!v.old).map(([k,v])=>`<button data-lg="${k}"><span class="ic">${v.ic}</span>${v.t}</button>`).join("");
